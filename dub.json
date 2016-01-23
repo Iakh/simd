@@ -1,0 +1,22 @@
+{
+    "authors": [
+        "Iakh Takh"
+    ],
+    "configurations": [
+        {
+            "name": "test",
+            "sourcePaths": ["std"],
+            "targetType": "library"
+        }
+    ],
+    "importPaths": [
+        "."
+    ],
+    "name": "simd",
+    "version": "0.0.1",
+    "targetType": "sourceLibrary",
+    "license": "MIT",
+    "copyright": "Copyright (c) 2016 Iakh Takh",
+    "description": "SIMD library for the D programming language",
+    "homepage": "https://github.com/????"
+}
