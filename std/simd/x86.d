@@ -29,103 +29,618 @@ version(LDC)
     import ldc.simd;
 }
 
+// Float point cmp immediate
+private enum CmpPXImm : byte
+{
+    EQ = 0, LT = 1, LE = 2, UNORD = 3, NEQ = 4, NLT = 5, NLE = 6, ORD = 7
+}
+
 /// Namespace for sse intrinsics
 struct sse
 {
 static:
 //pragma(inline, true):
 
-//Arithmetic:
-//addps - Adds 4 single-precision (32bit) floating-point values to 4 other single-precision floating-point values.
-//addss - Adds the lowest single-precision values, top 3 remain unchanged.
-//subps - Subtracts 4 single-precision floating-point values from 4 other single-precision floating-point values.
-//subss - Subtracts the lowest single-precision values, top 3 remain unchanged.
-//mulps - Multiplies 4 single-precision floating-point values with 4 other single-precision values.
-//mulss - Multiplies the lowest single-precision values, top 3 remain unchanged.
-//divps - Divides 4 single-precision floating-point values by 4 other single-precision floating-point values.
-//divss - Divides the lowest single-precision values, top 3 remain unchanged.
-//rcpps - Reciprocates (1/x) 4 single-precision floating-point values.
-//rcpss - Reciprocates the lowest single-precision values, top 3 remain unchanged.
-//sqrtps - Square root of 4 single-precision values.
-//sqrtss - Square root of lowest value, top 3 remain unchanged.
-//rsqrtps - Reciprocal square root of 4 single-precision floating-point values.
-//rsqrtss - Reciprocal square root of lowest single-precision value, top 3 remain unchanged.
-//maxps - Returns maximum of 2 values in each of 4 single-precision values.
-//maxss - Returns maximum of 2 values in the lowest single-precision value. Top 3 remain unchanged.
-//minps - Returns minimum of 2 values in each of 4 single-precision values.
-//minss - Returns minimum of 2 values in the lowest single-precision value, top 3 remain unchanged.
-//pavgb - Returns average of 2 values in each of 8 bytes.
-//pavgw - Returns average of 2 values in each of 4 words.
-//psadbw - Returns sum of absolute differences of 8 8bit values. Result in bottom 16 bits.
-//pextrw - Extracts 1 of 4 words.
-//pinsrw - Inserts 1 of 4 words.
-//pmaxsw - Returns maximum of 2 values in each of 4 signed word values.
-//pmaxub - Returns maximum of 2 values in each of 8 unsigned byte values.
-//pminsw - Returns minimum of 2 values in each of 4 signed word values.
-//pminub - Returns minimum of 2 values in each of 8 unsigned byte values.
-//pmovmskb - builds mask byte from top bit of 8 byte values.
-//pmulhuw - Multiplies 4 unsigned word values and stores the high 16bit result.
-//pshufw - Shuffles 4 word values. Takes 2 128bit values (source and dest) and an 8-bit immediate value, and then fills in each Dest 32-bit value from a Source 32-bit value specified by the immediate. The immediate byte is broken into 4 2-bit values.
-//
-//Logic:
-//andnps - Logically ANDs 4 single-precision values with the logical inverse (NOT) of 4 other single-precision values.
-//andps - Logically ANDs 4 single-precision values with 4 other single-precision values.
-//orps - Logically ORs 4 single-precision values with 4 other single-precision values.
-//xorps - Logically XORs 4 single-precision values with 4 other single-precision values.
-//
-//Compare:
-//cmpxxps - Compares 4 single-precision values.
-//cmpxxss - Compares lowest 2 single-precision values.
-//comiss - Compares lowest 2 single-recision values and stores result in EFLAGS.
-//ucomiss - Compares lowest 2 single-precision values and stores result in EFLAGS. (QNaNs don't throw exceptions with ucomiss, unlike comiss.)
-//Compare Codes (the xx parts above):
-//eq - Equal to.
-//lt - Less than.
-//le - Less than or equal to.
-//ne - Not equal.
-//nlt - Not less than.
-//nle - Not less than or equal to.
-//ord - Ordered.
-//unord - Unordered.
-//
-//Conversion:
-//cvtpi2ps - Converts 2 32bit integers to 32bit floating-point values. Top 2 values remain unchanged.
-//cvtps2pi - Converts 2 32bit floating-point values to 32bit integers.
-//cvtsi2ss - Converts 1 32bit integer to 32bit floating-point value. Top 3 values remain unchanged.
-//cvtss2si - Converts 1 32bit floating-point value to 32bit integer.
-//cvttps2pi - Converts 2 32bit floating-point values to 32bit integers using truncation.
-//cvttss2si - Converts 1 32bit floating-point value to 32bit integer using truncation.
-//
-//State:
-//fxrstor - Restores FP and SSE State.
-//fxsave - Stores FP and SSE State.
-//ldmxcsr - Loads the mxcsr register.
-//stmxcsr - Stores the mxcsr register.
-//
-//Load/Store:
-//movaps - Moves a 128bit value.
-//movhlps - Moves high half to a low half.
-//movlhps - Moves low half to upper halves.?
-//movhps - Moves 64bit value into top half of an xmm register.
-//movlps - Moves 64bit value into bottom half of an xmm register.
-//movmskps - Moves top bits of single-precision values into bottom 4 bits of a 32bit register.
-//movss - Moves the bottom single-precision value, top 3 remain unchanged if the destination is another xmm register, otherwise they're set to zero.
-//movups - Moves a 128bit value. Address can be unaligned.
-//maskmovq - Moves a 64bit value according to a mask.
-//movntps - Moves a 128bit value directly to memory, skipping the cache. (NT stands for "Non Temporal".)
-//movntq - Moves a 64bit value directly to memory, skipping the cache.
-//
-//Shuffling:
-//shufps - Shuffles 4 single-precision values. Complex.
-//unpckhps - Unpacks single-precision values from high halves.
-//unpcklps - Unpacks single-precision values from low halves.
-//
-//Cache Control:
-//prefetchT0 - Fetches a cache-line of data into all levels of cache.
-//prefetchT1 - Fetches a cache-line of data into all but the highest levels of cache.
-//prefetchT2 - Fetches a cache-line of data into all but the two highest levels of cache.
-//prefetchNTA - Fetches data into only the highest level of cache, not the lower levels.
-//sfence - Guarantees that all memory writes issued before the sfence instruction are completed before any writes after the sfence instruction.
+    //Arithmetic float:
+    public
+    {
+        /// addps - Adds 4 single-precision (32bit) floating-point values to 4 other single-precision floating-point values.
+        float4 addps(float4 v1, float4 v2)
+        {
+            version(DigitalMars)
+            {
+                return __simd(XMM.ADDPS, v1, v2);
+            }
+            else version(GNU)
+            {
+                return __builtin_ia32_addps(v1, v2);
+            }
+            else version(LDC)
+            {
+                return v1 + v2;
+            }
+            else
+            {
+                static assert(false, "Unsupported on this architecture");
+            }
+        }
+
+        /// Example:
+        unittest
+        {
+            float4 a = [1, 2, 0, 0];
+            float4 b = [3, 4, 0, 0];
+            auto c = addps(a, b);
+            assert(c.array == [4, 6, 0, 0]);
+        }
+
+        /// addss - Adds the lowest single-precision values, top 3 remain unchanged.
+        float4 addss(float4 v1, float4 v2)
+        {
+            version(DigitalMars)
+            {
+                return __simd(XMM.ADDSS, v1, v2);
+            }
+            else version(GNU)
+            {
+                return __builtin_ia32_addss(v1, v2);
+            }
+            else version(LDC)
+            {
+                return __builtin_ia32_addss(v1, v2);
+            }
+            else
+            {
+                static assert(false, "Unsupported on this architecture");
+            }
+        }
+
+        /// Example:
+        unittest
+        {
+            float4 a = [1, 2, 0, 0];
+            float4 b = [30, 40, 0, 0];
+            auto c = addss(a, b);
+            assert(c.array == [31, 2, 0, 0]);
+        }
+
+        /// subps - Subtracts 4 single-precision floating-point values from 4 other single-precision floating-point values.
+        float4 subps(float4 v1, float4 v2)
+        {
+            version(DigitalMars)
+            {
+                return __simd(XMM.SUBPS, v1, v2);
+            }
+            else version(GNU)
+            {
+                return __builtin_ia32_subps(v1, v2);
+            }
+            else version(LDC)
+            {
+                return v1 - v2;
+            }
+            else
+            {
+                static assert(false, "Unsupported on this architecture");
+            }
+        }
+
+        /// Example:
+        unittest
+        {
+            float4 a = [1, 2, 0, 0];
+            float4 b = [30, 40, 0, 0];
+            auto c = subps(a, b);
+            assert(c.array == [-29, -38, 0, 0]);
+        }
+
+        /// subss - Subtracts the lowest single-precision values, top 3 remain unchanged.
+        float4 subss(float4 v1, float4 v2)
+        {
+            version(DigitalMars)
+            {
+                return __simd(XMM.SUBSS, v1, v2);
+            }
+            else version(GNU)
+            {
+                return __builtin_ia32_subss(v1, v2);
+            }
+            else version(LDC)
+            {
+                return __builtin_ia32_subss(v1, v2);
+            }
+            else
+            {
+                static assert(false, "Unsupported on this architecture");
+            }
+        }
+
+        /// Example:
+        unittest
+        {
+            float4 a = [1, 2, 0, 0];
+            float4 b = [30, 40, 0, 0];
+            auto c = subss(a, b);
+            assert(c.array == [-29, 2, 0, 0]);
+        }
+
+        /// mulps - Multiplies 4 single-precision floating-point values with 4 other single-precision values.
+        float4 mulps(float4 v1, float4 v2)
+        {
+            version(DigitalMars)
+            {
+                return __simd(XMM.MULPS, v1, v2);
+            }
+            else version(GNU)
+            {
+                return __builtin_ia32_mulps(v1, v2);
+            }
+            else version(LDC)
+            {
+                return v1 * v2;
+            }
+            else
+            {
+                static assert(false, "Unsupported on this architecture");
+            }
+        }
+
+        /// Example:
+        unittest
+        {
+            float4 a = [-1, -2, 0, 0];
+            float4 b = [3, 3, 0, 0];
+            auto c = mulps(a, b);
+            assert(c.array == [-3, -6, 0, 0]);
+        }
+
+        /// mulss - Multiplies the lowest single-precision values, top 3 remain unchanged.
+        float4 mulss(float4 v1, float4 v2)
+        {
+            version(DigitalMars)
+            {
+                return __simd(XMM.MULSS, v1, v2);
+            }
+            else version(GNU)
+            {
+                return __builtin_ia32_mulss(v1, v2);
+            }
+            else version(LDC)
+            {
+                return __builtin_ia32_mulss(v1, v2);
+            }
+            else
+            {
+                static assert(false, "Unsupported on this architecture");
+            }
+        }
+
+        /// Example:
+        unittest
+        {
+            float4 a = [-1, -2, 0, 0];
+            float4 b = [3, 3, 0, 0];
+            auto c = mulss(a, b);
+            assert(c.array == [-3, -2, 0, 0]);
+        }
+
+        /// divps - Divides 4 single-precision floating-point values by 4 other single-precision floating-point values.
+        float4 divps(float4 v1, float4 v2)
+        {
+            version(DigitalMars)
+            {
+                return __simd(XMM.DIVPS, v1, v2);
+            }
+            else version(GNU)
+            {
+                return __builtin_ia32_divps(v1, v2);
+            }
+            else version(LDC)
+            {
+                return v1 / v2;
+            }
+            else
+            {
+                static assert(false, "Unsupported on this architecture");
+            }
+        }
+
+        /// Example:
+        unittest
+        {
+            float4 a = [3, 6, 0, 0];
+            float4 b = [3, 3, 1, 1];
+            auto c = divps(a, b);
+            assert(c.array == [1, 2, 0 ,0]);
+        }
+
+        /// divss - Divides the lowest single-precision values, top 3 remain unchanged.
+        float4 divss(float4 v1, float4 v2)
+        {
+            version(DigitalMars)
+            {
+                return __simd(XMM.DIVSS, v1, v2);
+            }
+            else version(GNU)
+            {
+                return __builtin_ia32_divss(v1, v2);
+            }
+            else version(LDC)
+            {
+                return __builtin_ia32_divss(v1, v2);
+            }
+            else
+            {
+                static assert(false, "Unsupported on this architecture");
+            }
+        }
+
+        /// Example:
+        unittest
+        {
+            float4 a = [3, 6, 0 ,0];
+            float4 b = [3, 3, 0 ,0];
+            auto c = divss(a, b);
+            assert(c.array == [1, 6, 0 ,0]);
+        }
+
+        /// maxps - Returns maximum of 2 values in each of 4 single-precision values.
+        float4 maxps(float4 v1, float4 v2)
+        {
+            version(DigitalMars)
+            {
+                return __simd(XMM.MAXPS, v1, v2);
+            }
+            else version(GNU)
+            {
+                return __builtin_ia32_maxps(v1, v2);
+            }
+            else version(LDC)
+            {
+                return __builtin_ia32_maxps(v1, v2);
+            }
+            else
+            {
+                static assert(false, "Unsupported on this architecture");
+            }
+        }
+
+        /// Example:
+        unittest
+        {
+            float4 a = [1, 20, 0, 0];
+            float4 b = [2, 10, 0, 0];
+            auto c = maxps(a, b);
+            assert(c.array == [2, 20, 0, 0]);
+        }
+
+        /// maxss - Returns maximum of 2 values in the lowest single-precision value. Top 3 remain unchanged.
+        float4 maxss(float4 v1, float4 v2)
+        {
+            version(DigitalMars)
+            {
+                return __simd(XMM.MAXSS, v1, v2);
+            }
+            else version(GNU)
+            {
+                return __builtin_ia32_maxss(v1, v2);
+            }
+            else version(LDC)
+            {
+                return __builtin_ia32_maxss(v1, v2);
+            }
+            else
+            {
+                static assert(false, "Unsupported on this architecture");
+            }
+        }
+
+        /// Example:
+        unittest
+        {
+            float4 a = [1, 20, 0, 0];
+            float4 b = [2, 30, 0, 0];
+            auto c = maxss(a, b);
+            assert(c.array == [2, 20, 0, 0]);
+        }
+
+        /// minps - Returns minimum of 2 values in each of 4 single-precision values.
+        float4 minps(float4 v1, float4 v2)
+        {
+            version(DigitalMars)
+            {
+                return __simd(XMM.MINPS, v1, v2);
+            }
+            else version(GNU)
+            {
+                return __builtin_ia32_minps(v1, v2);
+            }
+            else version(LDC)
+            {
+                return __builtin_ia32_minps(v1, v2);
+            }
+            else
+            {
+                static assert(false, "Unsupported on this architecture");
+            }
+        }
+
+        /// Example:
+        unittest
+        {
+            float4 a = [1, 20, 0, 0];
+            float4 b = [2, 10, 0, 0];
+            auto c = minps(a, b);
+            assert(c.array == [1, 10, 0, 0]);
+        }
+
+        /// minss - Returns minimum of 2 values in the lowest single-precision value, top 3 remain unchanged.
+        float4 minss(float4 v1, float4 v2)
+        {
+            version(DigitalMars)
+            {
+                return __simd(XMM.MINSS, v1, v2);
+            }
+            else version(GNU)
+            {
+                return __builtin_ia32_minss(v1, v2);
+            }
+            else version(LDC)
+            {
+                return __builtin_ia32_minss(v1, v2);
+            }
+            else
+            {
+                static assert(false, "Unsupported on this architecture");
+            }
+        }
+
+        /// Example:
+        unittest
+        {
+            float4 a = [1, 20, 0, 0];
+            float4 b = [2, 10, 0, 0];
+            auto c = minss(a, b);
+            assert(c.array == [1, 20, 0, 0]);
+        }
+
+        //rcpps - Reciprocates (1/x) 4 single-precision floating-point values.
+        //rcpss - Reciprocates the lowest single-precision values, top 3 remain unchanged.
+        //sqrtps - Square root of 4 single-precision values.
+        //sqrtss - Square root of lowest value, top 3 remain unchanged.
+        //rsqrtps - Reciprocal square root of 4 single-precision floating-point values.
+        //rsqrtss - Reciprocal square root of lowest single-precision value, top 3 remain unchanged.
+    }
+
+    //Arithmetic int:
+    public
+    {
+        //pavgb - Returns average of 2 values in each of 16 bytes.
+        //pavgw - Returns average of 2 values in each of 8 words.
+        //psadbw - Returns sum of absolute differences of 16 8bit values. Result in bottom 16 bits.
+        //pextrw - Extracts 1 of 8 words.
+        //pinsrw - Inserts 1 of 8 words.
+
+        /// pmaxsw - Returns maximum of 2 values in each of 8 signed word values.
+        short8 pmaxsw(short8 v1, short8 v2)
+        {
+            version(DigitalMars)
+            {
+                return __simd(XMM.PMAXSW, v1, v2);
+            }
+            else version(GNU)
+            {
+                return __builtin_ia32_pmaxsw128(v1, v2);
+            }
+            else version(LDC)
+            {
+                return __builtin_ia32_pmaxsw128(v1, v2);
+            }
+            else
+            {
+                static assert(false, "Unsupported on this architecture");
+            }
+        }
+
+        /// Example:
+        unittest
+        {
+            short8 a = [1, 2, 0, 0, 0, 0, 1, 1];
+            short8 b = [10, 20, 0, 0, 0, 0, 0, 1];
+            auto c = pmaxsw(a, b);
+            assert(c.array == [10, 20, 0, 0, 0, 0, 1, 1]);
+        }
+
+        /// pmaxub - Returns maximum of 2 values in each of 16 unsigned byte values.
+        byte16 pmaxub(byte16 v1, byte16 v2)
+        {
+            version(DigitalMars)
+            {
+                return __simd(XMM.PMAXUB, v1, v2);
+            }
+            else version(GNU)
+            {
+                return __builtin_ia32_pmaxub128(v1, v2);
+            }
+            else version(LDC)
+            {
+                return __builtin_ia32_pmaxub128(v1, v2);
+            }
+            else
+            {
+                static assert(false, "Unsupported on this architecture");
+            }
+        }
+
+        /// Example:
+        unittest
+        {
+            byte16 a = [1, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1];
+            byte16 b = [10, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1];
+            auto c = pmaxub(a, b);
+            assert(c.array == [10, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1]);
+        }
+
+        /// pminsw - Returns minimum of 2 values in each of 8 signed word values.
+        short8 pminsw(short8 v1, short8 v2)
+        {
+            version(DigitalMars)
+            {
+                return __simd(XMM.PMINSW, v1, v2);
+            }
+            else version(GNU)
+            {
+                return __builtin_ia32_pminsw128(v1, v2);
+            }
+            else version(LDC)
+            {
+                return __builtin_ia32_pminsw128(v1, v2);
+            }
+            else
+            {
+                static assert(false, "Unsupported on this architecture");
+            }
+        }
+
+        /// Example:
+        unittest
+        {
+            short8 a = [1, 2, 0, 0, 0, 0, 1, 1];
+            short8 b = [10, 20, 0, 0, 0, 0, 0, 1];
+            auto c = pminsw(a, b);
+            assert(c.array == [1, 2, 0, 0, 0, 0, 0, 1]);
+        }
+
+        /// pminub - Returns minimum of 2 values in each of 16 unsigned byte values.
+        byte16 pminub(byte16 v1, byte16 v2)
+        {
+            version(DigitalMars)
+            {
+                return __simd(XMM.PMINUB, v1, v2);
+            }
+            else version(GNU)
+            {
+                return __builtin_ia32_pminub128(v1, v2);
+            }
+            else version(LDC)
+            {
+                return __builtin_ia32_pminub128(v1, v2);
+            }
+            else
+            {
+                static assert(false, "Unsupported on this architecture");
+            }
+        }
+
+        /// Example:
+        unittest
+        {
+            byte16 a = [1, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1];
+            byte16 b = [10, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1];
+            auto c = pminub(a, b);
+            assert(c.array == [1, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]);
+        }
+
+        //pmovmskb - builds mask byte from top bit of 8 byte values.
+        //pmulhuw - Multiplies 4 unsigned word values and stores the high 16bit result.
+        //pshufw - Shuffles 4 word values. Takes 2 128bit values (source and dest) and an 8-bit immediate value, and then fills in each Dest 32-bit value from a Source 32-bit value specified by the immediate. The immediate byte is broken into 4 2-bit values.
+    }
+
+    //Logic:
+    //andnps - Logically ANDs 4 single-precision values with the logical inverse (NOT) of 4 other single-precision values.
+    //andps - Logically ANDs 4 single-precision values with 4 other single-precision values.
+    //orps - Logically ORs 4 single-precision values with 4 other single-precision values.
+    //xorps - Logically XORs 4 single-precision values with 4 other single-precision values.
+
+    //Compare:
+    public
+    {
+        //cmpxxps - Compares 4 single-precision values.
+        /// cmpps - Compares 4 pairs of 32bit floats.
+        version(none)
+            int4 cmpps(CmpPXImm imm)(float4 v1, float4 v2)
+            {
+                version(DigitalMars)
+                {
+                    return __simd(XMM.CMPPS, v1, v2, imm);
+                }
+                else version(GNU)
+                {
+                    return __builtin_ia32_cmpps(v1, v2, imm);
+                }
+                else version(LDC)
+                {
+                    return __builtin_ia32_cmpps(v1, v2, imm);
+                }
+                else
+                {
+                    static assert(false, "Unsupported on this architecture");
+                }
+            }
+
+        version(none)
+            /// Example:
+            unittest
+            {
+                float4 a = [2, 5, 0, 0];
+                float4 b = [3, 4, 0, 0];
+                int4 c = cmpps!(CmpPXImm.LE)(a, b);
+                assert(c.array == [-1, 0, -1, -1]);
+            }
+
+
+        //cmpxxss - Compares lowest 2 single-precision values.
+        //comiss - Compares lowest 2 single-recision values and stores result in EFLAGS.
+        //ucomiss - Compares lowest 2 single-precision values and stores result in EFLAGS. (QNaNs don't throw exceptions with ucomiss, unlike comiss.)
+        //Compare Codes (the xx parts above):
+        //eq - Equal to.
+        //lt - Less than.
+        //le - Less than or equal to.
+        //ne - Not equal.
+        //nlt - Not less than.
+        //nle - Not less than or equal to.
+        //ord - Ordered.
+        //unord - Unordered.
+    }
+
+    //Conversion:
+    //cvtpi2ps - Converts 2 32bit integers to 32bit floating-point values. Top 2 values remain unchanged.
+    //cvtps2pi - Converts 2 32bit floating-point values to 32bit integers.
+    //cvtsi2ss - Converts 1 32bit integer to 32bit floating-point value. Top 3 values remain unchanged.
+    //cvtss2si - Converts 1 32bit floating-point value to 32bit integer.
+    //cvttps2pi - Converts 2 32bit floating-point values to 32bit integers using truncation.
+    //cvttss2si - Converts 1 32bit floating-point value to 32bit integer using truncation.
+
+    //State:
+    //fxrstor - Restores FP and SSE State.
+    //fxsave - Stores FP and SSE State.
+    //ldmxcsr - Loads the mxcsr register.
+    //stmxcsr - Stores the mxcsr register.
+
+    //Load/Store:
+    //movaps - Moves a 128bit value.
+    //movhlps - Moves high half to a low half.
+    //movlhps - Moves low half to upper halves.?
+    //movhps - Moves 64bit value into top half of an xmm register.
+    //movlps - Moves 64bit value into bottom half of an xmm register.
+    //movmskps - Moves top bits of single-precision values into bottom 4 bits of a 32bit register.
+    //movss - Moves the bottom single-precision value, top 3 remain unchanged if the destination is another xmm register, otherwise they're set to zero.
+    //movups - Moves a 128bit value. Address can be unaligned.
+    //maskmovq - Moves a 64bit value according to a mask.
+    //movntps - Moves a 128bit value directly to memory, skipping the cache. (NT stands for "Non Temporal".)
+    //movntq - Moves a 64bit value directly to memory, skipping the cache.
+
+    //Shuffling:
+    //shufps - Shuffles 4 single-precision values. Complex.
+    //unpckhps - Unpacks single-precision values from high halves.
+    //unpcklps - Unpacks single-precision values from low halves.
+
+    //Cache Control:
+    //prefetchT0 - Fetches a cache-line of data into all levels of cache.
+    //prefetchT1 - Fetches a cache-line of data into all but the highest levels of cache.
+    //prefetchT2 - Fetches a cache-line of data into all but the two highest levels of cache.
+    //prefetchNTA - Fetches data into only the highest level of cache, not the lower levels.
+    //sfence - Guarantees that all memory writes issued before the sfence instruction are completed before any writes after the sfence instruction.
 
 }
 
@@ -135,523 +650,1552 @@ struct sse2
 static:
 //pragma(inline, true):
 
-    /// Arithmetic:
-
-    /// addpd - Adds 2 64bit doubles.
-    double2 addpd(double2 v1, double2 v2)
+    //Arithmetic double:
+    public
     {
-        version(DigitalMars)
+        /// addpd - Adds 2 64bit doubles.
+        double2 addpd(double2 v1, double2 v2)
         {
-            return __simd(XMM.ADDPD, v1, v2);
+            version(DigitalMars)
+            {
+                return __simd(XMM.ADDPD, v1, v2);
+            }
+            else version(GNU)
+            {
+                return __builtin_ia32_addpd(v1, v2);
+            }
+            else version(LDC)
+            {
+                return v1 + v2;
+            }
+            else
+            {
+                static assert(false, "Unsupported on this architecture");
+            }
         }
-        else version(GNU)
+
+        /// Example:
+        unittest
         {
-            return __builtin_ia32_addpd(v1, v2);
+            double2 a = [1, 2];
+            double2 b = [3, 4];
+            auto c = addpd(a, b);
+            assert(c.array == [4, 6]);
         }
-        else version(LDC)
+
+        /// addsd - Adds bottom 64bit doubles.
+        double2 addsd(double2 v1, double2 v2)
         {
-            return v1 + v2;
+            version(DigitalMars)
+            {
+                return __simd(XMM.ADDSD, v1, v2);
+            }
+            else version(GNU)
+            {
+                return __builtin_ia32_addsd(v1, v2);
+            }
+            else version(LDC)
+            {
+                return __builtin_ia32_addsd(v1, v2);
+            }
+            else
+            {
+                static assert(false, "Unsupported on this architecture");
+            }
         }
-        else
+
+        /// Example:
+        unittest
         {
-            static assert(false, "Unsupported on this architecture");
+            double2 a = [1, 2];
+            double2 b = [30, 40];
+            auto c = addsd(a, b);
+            assert(c.array == [31, 2]);
         }
+
+        /// subpd - Subtracts 2 64bit doubles.
+        double2 subpd(double2 v1, double2 v2)
+        {
+            version(DigitalMars)
+            {
+                return __simd(XMM.SUBPD, v1, v2);
+            }
+            else version(GNU)
+            {
+                return __builtin_ia32_subpd(v1, v2);
+            }
+            else version(LDC)
+            {
+                return v1 - v2;
+            }
+            else
+            {
+                static assert(false, "Unsupported on this architecture");
+            }
+        }
+
+        /// Example:
+        unittest
+        {
+            double2 a = [1, 2];
+            double2 b = [30, 40];
+            auto c = subpd(a, b);
+            assert(c.array == [-29, -38]);
+        }
+
+        /// subsd - Subtracts bottom 64bit doubles.
+        double2 subsd(double2 v1, double2 v2)
+        {
+            version(DigitalMars)
+            {
+                return __simd(XMM.SUBSD, v1, v2);
+            }
+            else version(GNU)
+            {
+                return __builtin_ia32_subsd(v1, v2);
+            }
+            else version(LDC)
+            {
+                return __builtin_ia32_subsd(v1, v2);
+            }
+            else
+            {
+                static assert(false, "Unsupported on this architecture");
+            }
+        }
+
+        /// Example:
+        unittest
+        {
+            double2 a = [1, 2];
+            double2 b = [30, 40];
+            auto c = subsd(a, b);
+            assert(c.array == [-29, 2]);
+        }
+
+        /// mulpd - Multiplies 2 64bit doubles.
+        double2 mulpd(double2 v1, double2 v2)
+        {
+            version(DigitalMars)
+            {
+                return __simd(XMM.MULPD, v1, v2);
+            }
+            else version(GNU)
+            {
+                return __builtin_ia32_mulpd(v1, v2);
+            }
+            else version(LDC)
+            {
+                return v1 * v2;
+            }
+            else
+            {
+                static assert(false, "Unsupported on this architecture");
+            }
+        }
+
+        /// Example:
+        unittest
+        {
+            double2 a = [-1, -2];
+            double2 b = [3, 3];
+            auto c = mulpd(a, b);
+            assert(c.array == [-3, -6]);
+        }
+
+        /// mulsd - Multiplies bottom 64bit doubles.
+        double2 mulsd(double2 v1, double2 v2)
+        {
+            version(DigitalMars)
+            {
+                return __simd(XMM.MULSD, v1, v2);
+            }
+            else version(GNU)
+            {
+                return __builtin_ia32_mulsd(v1, v2);
+            }
+            else version(LDC)
+            {
+                return __builtin_ia32_mulsd(v1, v2);
+            }
+            else
+            {
+                static assert(false, "Unsupported on this architecture");
+            }
+        }
+
+        /// Example:
+        unittest
+        {
+            double2 a = [-1, -2];
+            double2 b = [3, 3];
+            auto c = mulsd(a, b);
+            assert(c.array == [-3, -2]);
+        }
+
+        /// divpd - Divides 2 64bit doubles.
+        double2 divpd(double2 v1, double2 v2)
+        {
+            version(DigitalMars)
+            {
+                return __simd(XMM.DIVPD, v1, v2);
+            }
+            else version(GNU)
+            {
+                return __builtin_ia32_divpd(v1, v2);
+            }
+            else version(LDC)
+            {
+                return v1 / v2;
+            }
+            else
+            {
+                static assert(false, "Unsupported on this architecture");
+            }
+        }
+
+        /// Example:
+        unittest
+        {
+            double2 a = [3, 6];
+            double2 b = [3, 3];
+            auto c = divpd(a, b);
+            assert(c.array == [1, 2]);
+        }
+
+        /// divsd - Divides bottom 64bit doubles.
+        double2 divsd(double2 v1, double2 v2)
+        {
+            version(DigitalMars)
+            {
+                return __simd(XMM.DIVSD, v1, v2);
+            }
+            else version(GNU)
+            {
+                return __builtin_ia32_divsd(v1, v2);
+            }
+            else version(LDC)
+            {
+                return __builtin_ia32_divsd(v1, v2);
+            }
+            else
+            {
+                static assert(false, "Unsupported on this architecture");
+            }
+        }
+
+        /// Example:
+        unittest
+        {
+            double2 a = [3, 6];
+            double2 b = [3, 3];
+            auto c = divsd(a, b);
+            assert(c.array == [1, 6]);
+        }
+
+        /// maxpd - Gets largest of 2 64bit doubles for 2 sets.
+        double2 maxpd(double2 v1, double2 v2)
+        {
+            version(DigitalMars)
+            {
+                return __simd(XMM.MAXPD, v1, v2);
+            }
+            else version(GNU)
+            {
+                return __builtin_ia32_maxpd(v1, v2);
+            }
+            else version(LDC)
+            {
+                return __builtin_ia32_maxpd(v1, v2);
+            }
+            else
+            {
+                static assert(false, "Unsupported on this architecture");
+            }
+        }
+
+        /// Example:
+        unittest
+        {
+            double2 a = [1, 20];
+            double2 b = [2, 10];
+            auto c = maxpd(a, b);
+            assert(c.array == [2, 20]);
+        }
+
+        /// maxsd - Gets largets of 2 64bit doubles to bottom set.
+        double2 maxsd(double2 v1, double2 v2)
+        {
+            version(DigitalMars)
+            {
+                return __simd(XMM.MAXSD, v1, v2);
+            }
+            else version(GNU)
+            {
+                return __builtin_ia32_maxsd(v1, v2);
+            }
+            else version(LDC)
+            {
+                return __builtin_ia32_maxsd(v1, v2);
+            }
+            else
+            {
+                static assert(false, "Unsupported on this architecture");
+            }
+        }
+
+        /// Example:
+        unittest
+        {
+            double2 a = [1, 20];
+            double2 b = [2, 30];
+            auto c = maxsd(a, b);
+            assert(c.array == [2, 20]);
+        }
+
+        /// minpd - Gets smallest of 2 64bit doubles for 2 sets.
+        double2 minpd(double2 v1, double2 v2)
+        {
+            version(DigitalMars)
+            {
+                return __simd(XMM.MINPD, v1, v2);
+            }
+            else version(GNU)
+            {
+                return __builtin_ia32_minpd(v1, v2);
+            }
+            else version(LDC)
+            {
+                return __builtin_ia32_minpd(v1, v2);
+            }
+            else
+            {
+                static assert(false, "Unsupported on this architecture");
+            }
+        }
+
+        /// Example:
+        unittest
+        {
+            double2 a = [1, 20];
+            double2 b = [2, 10];
+            auto c = minpd(a, b);
+            assert(c.array == [1, 10]);
+        }
+
+        /// minsd - Gets smallest of 2 64bit values for bottom set.
+        double2 minsd(double2 v1, double2 v2)
+        {
+            version(DigitalMars)
+            {
+                return __simd(XMM.MINSD, v1, v2);
+            }
+            else version(GNU)
+            {
+                return __builtin_ia32_minsd(v1, v2);
+            }
+            else version(LDC)
+            {
+                return __builtin_ia32_minsd(v1, v2);
+            }
+            else
+            {
+                static assert(false, "Unsupported on this architecture");
+            }
+        }
+
+        /// Example:
+        unittest
+        {
+            double2 a = [1, 20];
+            double2 b = [2, 10];
+            auto c = minsd(a, b);
+            assert(c.array == [1, 20]);
+        }
+
+        //rcpps - Approximates the reciprocal of 4 32bit singles.
+        //rcpss - Approximates the reciprocal of bottom 32bit single.
+        //sqrtpd - Returns square root of 2 64bit doubles.
+        //sqrtsd - Returns square root of bottom 64bit double.
     }
 
-    /// Example:
-    unittest
+    //Arithmetic int:
+    public
     {
-        double2 a = [1, 2];
-        double2 b = [3, 4];
-        auto c = addpd(a, b);
-        assert(c.array == [4, 6]);
+        /// paddb - Adds 16 8bit integers.
+        byte16 paddb(byte16 v1, byte16 v2)
+        {
+            version(DigitalMars)
+            {
+                return __simd(XMM.PADDB, v1, v2);
+            }
+            else version(GNU)
+            {
+                return __builtin_ia32_paddb128(v1, v2);
+            }
+            else version(LDC)
+            {
+                return v1 + v2;
+            }
+            else
+            {
+                static assert(false, "Unsupported on this architecture");
+            }
+        }
+
+        /// Example (overflow):
+        unittest
+        {
+            byte16 a = [1, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, byte.max];
+            byte16 b = [10, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1];
+            auto c = paddb(a, b);
+            assert(c.array == [11, 22, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, byte.min]);
+        }
+
+        /// paddw - Adds 8 16bit integers.
+        short8 paddw(short8 v1, short8 v2)
+        {
+            version(DigitalMars)
+            {
+                return __simd(XMM.PADDW, v1, v2);
+            }
+            else version(GNU)
+            {
+                return __builtin_ia32_paddw128(v1, v2);
+            }
+            else version(LDC)
+            {
+                return v1 + v2;
+            }
+            else
+            {
+                static assert(false, "Unsupported on this architecture");
+            }
+        }
+
+        /// Example (overflow):
+        unittest
+        {
+            short8 a = [1, 2, 0, 0, 0, 0, 0, short.max];
+            short8 b = [10, 20, 0, 0, 0, 0, 0, 1];
+            auto c = paddw(a, b);
+            assert(c.array == [11, 22, 0, 0, 0, 0, 0, short.min]);
+        }
+
+        /// paddd - Adds 4 32bit integers.
+        int4 paddd(int4 v1, int4 v2)
+        {
+            version(DigitalMars)
+            {
+                return __simd(XMM.PADDD, v1, v2);
+            }
+            else version(GNU)
+            {
+                return __builtin_ia32_paddd128(v1, v2);
+            }
+            else version(LDC)
+            {
+                return v1 + v2;
+            }
+            else
+            {
+                static assert(false, "Unsupported on this architecture");
+            }
+        }
+
+        /// Example:
+        unittest
+        {
+            int4 a = [1, 2, 0, 1];
+            int4 b = [10, 20, 0, 1];
+            auto c = paddd(a, b);
+            assert(c.array == [11, 22, 0, 2]);
+        }
+
+        /// paddq - Adds 2 64bit integers.
+        long2 paddq(long2 v1, long2 v2)
+        {
+            version(DigitalMars)
+            {
+                return __simd(XMM.PADDQ, v1, v2);
+            }
+            else version(GNU)
+            {
+                return __builtin_ia32_paddq128(v1, v2);
+            }
+            else version(LDC)
+            {
+                return v1 + v2;
+            }
+            else
+            {
+                static assert(false, "Unsupported on this architecture");
+            }
+        }
+
+        /// Example:
+        unittest
+        {
+            long2 a = [1, 2];
+            long2 b = [10, 20];
+            auto c = paddq(a, b);
+            assert(c.array == [11, 22]);
+        }
+
+        /// paddsb - Adds 16 8bit integers with saturation.
+        byte16 paddsb(byte16 v1, byte16 v2)
+        {
+            version(DigitalMars)
+            {
+                return __simd(XMM.PADDSB, v1, v2);
+            }
+            else version(GNU)
+            {
+                return __builtin_ia32_paddsb128(v1, v2);
+            }
+            else version(LDC)
+            {
+                return __builtin_ia32_paddsb128(v1, v2);
+            }
+            else
+            {
+                static assert(false, "Unsupported on this architecture");
+            }
+        }
+
+        /// Example (saturation):
+        unittest
+        {
+            byte16 a = [1, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, byte.max];
+            byte16 b = [10, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1];
+            auto c = paddsb(a, b);
+            assert(c.array == [11, 22, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, byte.max]);
+        }
+
+        /// paddsw - Adds 8 16bit integers using saturation.
+        short8 paddsw(short8 v1, short8 v2)
+        {
+            version(DigitalMars)
+            {
+                return __simd(XMM.PADDSW, v1, v2);
+            }
+            else version(GNU)
+            {
+                return __builtin_ia32_paddsw128(v1, v2);
+            }
+            else version(LDC)
+            {
+                return __builtin_ia32_paddsw128(v1, v2);
+            }
+            else
+            {
+                static assert(false, "Unsupported on this architecture");
+            }
+        }
+
+        /// Example (saturarion):
+        unittest
+        {
+            short8 a = [1, 2, 0, 0, 0, 0, 0, short.max];
+            short8 b = [10, 20, 0, 0, 0, 0, 0, 1];
+            auto c = paddsw(a, b);
+            assert(c.array == [11, 22, 0, 0, 0, 0, 0, short.max]);
+        }
+
+        /// paddusb - Adds 16 8bit unsigned integers using saturation.
+        ubyte16 paddusb(ubyte16 v1, ubyte16 v2)
+        {
+            version(DigitalMars)
+            {
+                return __simd(XMM.PADDUSB, v1, v2);
+            }
+            else version(GNU)
+            {
+                return __builtin_ia32_paddusb128(v1, v2);
+            }
+            else version(LDC)
+            {
+                return __builtin_ia32_paddusb128(v1, v2);
+            }
+            else
+            {
+                static assert(false, "Unsupported on this architecture");
+            }
+        }
+
+        /// Example (saturation):
+        unittest
+        {
+            ubyte16 a = [1, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ubyte.max];
+            ubyte16 b = [10, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1];
+            auto c = paddusb(a, b);
+            assert(c.array == [11, 22, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ubyte.max]);
+        }
+
+        /// paddusw - Adds 8 16bit unsigned integers using saturation.
+        ushort8 paddusw(ushort8 v1, ushort8 v2)
+        {
+            version(DigitalMars)
+            {
+                return __simd(XMM.PADDUSW, v1, v2);
+            }
+            else version(GNU)
+            {
+                return __builtin_ia32_paddusw128(v1, v2);
+            }
+            else version(LDC)
+            {
+                return __builtin_ia32_paddusw128(v1, v2);
+            }
+            else
+            {
+                static assert(false, "Unsupported on this architecture");
+            }
+        }
+
+        /// Example (saturarion):
+        unittest
+        {
+            ushort8 a = [1, 2, 0, 0, 0, 0, 0, ushort.max];
+            ushort8 b = [10, 20, 0, 0, 0, 0, 0, 1];
+            auto c = paddusw(a, b);
+            assert(c.array == [11, 22, 0, 0, 0, 0, 0, ushort.max]);
+        }
+
+        /// psubb - Subtracts 16 8bit integers.
+        byte16 psubb(byte16 v1, byte16 v2)
+        {
+            version(DigitalMars)
+            {
+                return __simd(XMM.PSUBB, v1, v2);
+            }
+            else version(GNU)
+            {
+                return __builtin_ia32_psubb128(v1, v2);
+            }
+            else version(LDC)
+            {
+                return v1 - v2;
+            }
+            else
+            {
+                static assert(false, "Unsupported on this architecture");
+            }
+        }
+
+        /// Example (overflow):
+        unittest
+        {
+            byte16 a = [11, 22, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, byte.min];
+            byte16 b = [1, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1];
+            auto c = psubb(a, b);
+            assert(c.array == [10, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, byte.max]);
+        }
+
+        /// psubw - Subtracts 8 16bit integers.
+        short8 psubw(short8 v1, short8 v2)
+        {
+            version(DigitalMars)
+            {
+                return __simd(XMM.PSUBW, v1, v2);
+            }
+            else version(GNU)
+            {
+                return __builtin_ia32_psubw128(v1, v2);
+            }
+            else version(LDC)
+            {
+                return v1 - v2;
+            }
+            else
+            {
+                static assert(false, "Unsupported on this architecture");
+            }
+        }
+
+        /// Example (overflow):
+        unittest
+        {
+            short8 a = [11, 22, 0, 0, 0, 0, 0, short.min];
+            short8 b = [1, 2, 0, 0, 0, 0, 0, 1];
+            auto c = psubw(a, b);
+            assert(c.array == [10, 20, 0, 0, 0, 0, 0, short.max]);
+        }
+
+        /// psubd - Subtracts 4 32bit integers.
+        int4 psubd(int4 v1, int4 v2)
+        {
+            version(DigitalMars)
+            {
+                return __simd(XMM.PSUBD, v1, v2);
+            }
+            else version(GNU)
+            {
+                return __builtin_ia32_psubd128(v1, v2);
+            }
+            else version(LDC)
+            {
+                return v1 - v2;
+            }
+            else
+            {
+                static assert(false, "Unsupported on this architecture");
+            }
+        }
+
+        /// Example:
+        unittest
+        {
+            int4 a = [11, 22, 0, 1];
+            int4 b = [1, 2, 0, 1];
+            auto c = psubd(a, b);
+            assert(c.array == [10, 20, 0, 0]);
+        }
+
+        /// psubq - Subtracts 2 64bit integers.
+        long2 psubq(long2 v1, long2 v2)
+        {
+            version(DigitalMars)
+            {
+                return __simd(XMM.PSUBQ, v1, v2);
+            }
+            else version(GNU)
+            {
+                return __builtin_ia32_psubq128(v1, v2);
+            }
+            else version(LDC)
+            {
+                return v1 - v2;
+            }
+            else
+            {
+                static assert(false, "Unsupported on this architecture");
+            }
+        }
+
+        /// Example:
+        unittest
+        {
+            long2 a = [11, 22];
+            long2 b = [1, 2];
+            auto c = psubq(a, b);
+            assert(c.array == [10, 20]);
+        }
+
+        /// psubsb - Subtracts 16 8bit integers using saturation.
+        byte16 psubsb(byte16 v1, byte16 v2)
+        {
+            version(DigitalMars)
+            {
+                return __simd(XMM.PSUBSB, v1, v2);
+            }
+            else version(GNU)
+            {
+                return __builtin_ia32_psubsb128(v1, v2);
+            }
+            else version(LDC)
+            {
+                return __builtin_ia32_psubsb128(v1, v2);
+            }
+            else
+            {
+                static assert(false, "Unsupported on this architecture");
+            }
+        }
+
+        /// Example (saturation):
+        unittest
+        {
+            byte16 a = [11, 22, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, byte.min];
+            byte16 b = [1, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1];
+            auto c = psubsb(a, b);
+            assert(c.array == [10, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, byte.min]);
+        }
+
+        /// psubsw - Subtracts 8 16bit integers using saturation.
+        short8 psubsw(short8 v1, short8 v2)
+        {
+            version(DigitalMars)
+            {
+                return __simd(XMM.PSUBSW, v1, v2);
+            }
+            else version(GNU)
+            {
+                return __builtin_ia32_psubsw128(v1, v2);
+            }
+            else version(LDC)
+            {
+                return __builtin_ia32_psubsw128(v1, v2);
+            }
+            else
+            {
+                static assert(false, "Unsupported on this architecture");
+            }
+        }
+
+        /// Example (saturarion):
+        unittest
+        {
+            short8 a = [11, 22, 0, 0, 0, 0, 0, short.min];
+            short8 b = [1, 2, 0, 0, 0, 0, 0, 1];
+            auto c = psubsw(a, b);
+            assert(c.array == [10, 20, 0, 0, 0, 0, 0, short.min]);
+        }
+
+        /// paddusb - Adds 16 8bit unsigned integers using saturation.
+        ubyte16 psubusb(ubyte16 v1, ubyte16 v2)
+        {
+            version(DigitalMars)
+            {
+                return __simd(XMM.PSUBUSB, v1, v2);
+            }
+            else version(GNU)
+            {
+                return __builtin_ia32_psubusb128(v1, v2);
+            }
+            else version(LDC)
+            {
+                return __builtin_ia32_psubusb128(v1, v2);
+            }
+            else
+            {
+                static assert(false, "Unsupported on this architecture");
+            }
+        }
+
+        /// Example (saturation):
+        unittest
+        {
+            ubyte16 a = [11, 22, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+            ubyte16 b = [1, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1];
+            auto c = psubusb(a, b);
+            assert(c.array == [10, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+        }
+
+        /// psubusw - Subtracts 8 16bit unsigned integers using saturation.
+        ushort8 psubusw(ushort8 v1, ushort8 v2)
+        {
+            version(DigitalMars)
+            {
+                return __simd(XMM.PSUBUSW, v1, v2);
+            }
+            else version(GNU)
+            {
+                return __builtin_ia32_psubusw128(v1, v2);
+            }
+            else version(LDC)
+            {
+                return __builtin_ia32_psubusw128(v1, v2);
+            }
+            else
+            {
+                static assert(false, "Unsupported on this architecture");
+            }
+        }
+
+        /// Example (saturarion):
+        unittest
+        {
+            ushort8 a = [11, 22, 0, 0, 0, 0, 0, ushort.min];
+            ushort8 b = [1, 2, 0, 0, 0, 0, 0, 1];
+            auto c = psubusw(a, b);
+            assert(c.array == [10, 20, 0, 0, 0, 0, 0, ushort.min]);
+        }
+
+        //pmaddwd - Multiplies 16bit integers into 32bit results and adds results.
+        //pmulhw - Multiplies 16bit integers and returns the high 16bits of the result.
+        //pmullw - Multiplies 16bit integers and returns the low 16bits of the result.
+        //pmuludq - Multiplies 2 32bit pairs and stores 2 64bit results.
     }
 
-    /// addsd - Adds bottom 64bit doubles.
-    double2 addsd(double2 v1, double2 v2)
-    {
-        version(DigitalMars)
-        {
-            return __simd(XMM.ADDSD, v1, v2);
-        }
-        else version(GNU)
-        {
-            return __builtin_ia32_addsd(v1, v2);
-        }
-        else version(LDC)
-        {
-            return __builtin_ia32_addsd(v1, v2);
-        }
-        else
-        {
-            static assert(false, "Unsupported on this architecture");
-        }
-    }
-
-    /// Example:
-    unittest
-    {
-        double2 a = [1, 2];
-        double2 b = [30, 40];
-        auto c = addsd(a, b);
-        assert(c.array == [31, 2]);
-    }
-
-    /// subpd - Subtracts 2 64bit doubles.
-    double2 subpd(double2 v1, double2 v2)
-    {
-        version(DigitalMars)
-        {
-            return __simd(XMM.SUBPD, v1, v2);
-        }
-        else version(GNU)
-        {
-            return __builtin_ia32_subpd(v1, v2);
-        }
-        else version(LDC)
-        {
-            return v1 - v2;
-        }
-        else
-        {
-            static assert(false, "Unsupported on this architecture");
-        }
-    }
-
-    /// Example:
-    unittest
-    {
-        double2 a = [1, 2];
-        double2 b = [30, 40];
-        auto c = subpd(a, b);
-        assert(c.array == [-29, -38]);
-    }
-
-    /// subsd - Subtracts bottom 64bit doubles.
-    double2 subsd(double2 v1, double2 v2)
-    {
-        version(DigitalMars)
-        {
-            return __simd(XMM.SUBSD, v1, v2);
-        }
-        else version(GNU)
-        {
-            return __builtin_ia32_subsd(v1, v2);
-        }
-        else version(LDC)
-        {
-            return __builtin_ia32_subsd(v1, v2);
-        }
-        else
-        {
-            static assert(false, "Unsupported on this architecture");
-        }
-    }
-
-    /// Example:
-    unittest
-    {
-        double2 a = [1, 2];
-        double2 b = [30, 40];
-        auto c = subsd(a, b);
-        assert(c.array == [-29, 2]);
-    }
-
-    /// mulpd - Multiplies 2 64bit doubles.
-    double2 mulpd(double2 v1, double2 v2)
-    {
-        version(DigitalMars)
-        {
-            return __simd(XMM.MULPD, v1, v2);
-        }
-        else version(GNU)
-        {
-            return __builtin_ia32_mulpd(v1, v2);
-        }
-        else version(LDC)
-        {
-            return v1 * v2;
-        }
-        else
-        {
-            static assert(false, "Unsupported on this architecture");
-        }
-    }
-
-    /// Example:
-    unittest
-    {
-        double2 a = [-1, -2];
-        double2 b = [3, 3];
-        auto c = mulpd(a, b);
-        assert(c.array == [-3, -6]);
-    }
-
-    /// mulsd - Multiplies bottom 64bit doubles.
-    double2 mulsd(double2 v1, double2 v2)
-    {
-        version(DigitalMars)
-        {
-            return __simd(XMM.MULSD, v1, v2);
-        }
-        else version(GNU)
-        {
-            return __builtin_ia32_mulsd(v1, v2);
-        }
-        else version(LDC)
-        {
-            return __builtin_ia32_mulsd(v1, v2);
-        }
-        else
-        {
-            static assert(false, "Unsupported on this architecture");
-        }
-    }
-
-    /// Example:
-    unittest
-    {
-        double2 a = [-1, -2];
-        double2 b = [3, 3];
-        auto c = mulsd(a, b);
-        assert(c.array == [-3, -2]);
-    }
-
-    /// divpd - Divides 2 64bit doubles.
-    double2 divpd(double2 v1, double2 v2)
-    {
-        version(DigitalMars)
-        {
-            return __simd(XMM.DIVPD, v1, v2);
-        }
-        else version(GNU)
-        {
-            return __builtin_ia32_divpd(v1, v2);
-        }
-        else version(LDC)
-        {
-            return v1 / v2;
-        }
-        else
-        {
-            static assert(false, "Unsupported on this architecture");
-        }
-    }
-
-    /// Example:
-    unittest
-    {
-        double2 a = [3, 6];
-        double2 b = [3, 3];
-        auto c = divpd(a, b);
-        assert(c.array == [1, 2]);
-    }
-
-    /// divsd - Divides bottom 64bit doubles.
-    double2 divsd(double2 v1, double2 v2)
-    {
-        version(DigitalMars)
-        {
-            return __simd(XMM.DIVSD, v1, v2);
-        }
-        else version(GNU)
-        {
-            return __builtin_ia32_divsd(v1, v2);
-        }
-        else version(LDC)
-        {
-            return __builtin_ia32_divsd(v1, v2);
-        }
-        else
-        {
-            static assert(false, "Unsupported on this architecture");
-        }
-    }
-
-    /// Example:
-    unittest
-    {
-        double2 a = [3, 6];
-        double2 b = [3, 3];
-        auto c = divsd(a, b);
-        assert(c.array == [1, 6]);
-    }
-
-    /// maxpd - Gets largest of 2 64bit doubles for 2 sets.
-    double2 maxpd(double2 v1, double2 v2)
-    {
-        version(DigitalMars)
-        {
-            return __simd(XMM.MAXPD, v1, v2);
-        }
-        else version(GNU)
-        {
-            return __builtin_ia32_maxpd(v1, v2);
-        }
-        else version(LDC)
-        {
-            return __builtin_ia32_maxpd(v1, v2);
-        }
-        else
-        {
-            static assert(false, "Unsupported on this architecture");
-        }
-    }
-
-    /// Example:
-    unittest
-    {
-        double2 a = [1, 20];
-        double2 b = [2, 10];
-        auto c = maxpd(a, b);
-        assert(c.array == [2, 20]);
-    }
-
-    /// maxsd - Gets largets of 2 64bit doubles to bottom set.
-    double2 maxsd(double2 v1, double2 v2)
-    {
-        version(DigitalMars)
-        {
-            return __simd(XMM.MAXSD, v1, v2);
-        }
-        else version(GNU)
-        {
-            return __builtin_ia32_maxsd(v1, v2);
-        }
-        else version(LDC)
-        {
-            return __builtin_ia32_maxsd(v1, v2);
-        }
-        else
-        {
-            static assert(false, "Unsupported on this architecture");
-        }
-    }
-
-    /// Example:
-    unittest
-    {
-        double2 a = [1, 20];
-        double2 b = [2, 30];
-        auto c = maxsd(a, b);
-        assert(c.array == [2, 20]);
-    }
-
-    /// minpd - Gets smallest of 2 64bit doubles for 2 sets.
-    double2 minpd(double2 v1, double2 v2)
-    {
-        version(DigitalMars)
-        {
-            return __simd(XMM.MINPD, v1, v2);
-        }
-        else version(GNU)
-        {
-            return __builtin_ia32_minpd(v1, v2);
-        }
-        else version(LDC)
-        {
-            return __builtin_ia32_minpd(v1, v2);
-        }
-        else
-        {
-            static assert(false, "Unsupported on this architecture");
-        }
-    }
-
-    /// Example:
-    unittest
-    {
-        double2 a = [1, 20];
-        double2 b = [2, 10];
-        auto c = minpd(a, b);
-        assert(c.array == [1, 10]);
-    }
-
-    /// minsd - Gets smallest of 2 64bit values for bottom set.
-    double2 minsd(double2 v1, double2 v2)
-    {
-        version(DigitalMars)
-        {
-            return __simd(XMM.MINSD, v1, v2);
-        }
-        else version(GNU)
-        {
-            return __builtin_ia32_minsd(v1, v2);
-        }
-        else version(LDC)
-        {
-            return __builtin_ia32_minsd(v1, v2);
-        }
-        else
-        {
-            static assert(false, "Unsupported on this architecture");
-        }
-    }
-
-    /// Example:
-    unittest
-    {
-        double2 a = [1, 20];
-        double2 b = [2, 10];
-        auto c = minsd(a, b);
-        assert(c.array == [1, 20]);
-    }
-
-    /// paddb - Adds 16 8bit integers.
-    byte16 paddb(byte16 v1, byte16 v2)
-    {
-        version(DigitalMars)
-        {
-            return __simd(XMM.PADDB, v1, v2);
-        }
-        else version(GNU)
-        {
-            return __builtin_ia32_paddb128(v1, v2);
-        }
-        else version(LDC)
-        {
-            return v1 + v2;
-        }
-        else
-        {
-            static assert(false, "Unsupported on this architecture");
-        }
-    }
-
-    /// Example:
-    unittest
-    {
-        byte16 a = [1, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1];
-        byte16 b = [10, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1];
-        auto c = paddb(a, b);
-        assert(c.array == [11, 22, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2]);
-    }
-
-    //paddw - Adds 8 16bit integers.
-    //paddd - Adds 4 32bit integers.
-    //paddq - Adds 2 64bit integers.
-    //paddsb - Adds 16 8bit integers with saturation.
-    //paddsw - Adds 8 16bit integers using saturation.
-    //paddusb - Adds 16 8bit unsigned integers using saturation.
-    //paddusw - Adds 8 16bit unsigned integers using saturation.
-    //psubb - Subtracts 16 8bit integers.
-    //psubw - Subtracts 8 16bit integers.
-    //psubd - Subtracts 4 32bit integers.
-    //psubq - Subtracts 2 64bit integers.
-    //psubsb - Subtracts 16 8bit integers using saturation.
-    //psubsw - Subtracts 8 16bit integers using saturation.
-    //psubusb - Subtracts 16 8bit unsigned integers using saturation.
-    //psubusw - Subtracts 8 16bit unsigned integers using saturation.
-    //pmaddwd - Multiplies 16bit integers into 32bit results and adds results.
-    //pmulhw - Multiplies 16bit integers and returns the high 16bits of the result.
-    //pmullw - Multiplies 16bit integers and returns the low 16bits of the result.
-    //pmuludq - Multiplies 2 32bit pairs and stores 2 64bit results.
-    //rcpps - Approximates the reciprocal of 4 32bit singles.
-    //rcpss - Approximates the reciprocal of bottom 32bit single.
-    //sqrtpd - Returns square root of 2 64bit doubles.
-    //sqrtsd - Returns square root of bottom 64bit double.
-
-    /// pmaxub - Returns maximum of 2 values in each of 8 unsigned byte values.
-    byte16 pmaxub(byte16 v1, byte16 v2)
-    {
-        version(DigitalMars)
-        {
-            return __simd(XMM.PMAXUB, v1, v2);
-        }
-        else version(GNU)
-        {
-            return __builtin_ia32_pmaxub128(v1, v2);
-        }
-        else version(LDC)
-        {
-            return __builtin_ia32_pmaxub128(v1, v2);
-        }
-        else
-        {
-            static assert(false, "Unsupported on this architecture");
-        }
-    }
-
-    /// Example:
-    unittest
-    {
-        byte16 a = [1, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1];
-        byte16 b = [10, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1];
-        auto c = pmaxub(a, b);
-        assert(c.array == [10, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1]);
-    }
-
-    //
     //Logic:
-    //andnpd - Logically NOT ANDs 2 64bit doubles.
-    //andnps - Logically NOT ANDs 4 32bit singles.
-    //andpd - Logically ANDs 2 64bit doubles.
-    //pand - Logically ANDs 2 128bit registers.
-    //pandn - Logically Inverts the first 128bit operand and ANDs with the second.
-    //por - Logically ORs 2 128bit registers.
-    //pslldq - Logically left shifts 1 128bit value.
-    //psllq - Logically left shifts 2 64bit values.
-    //pslld - Logically left shifts 4 32bit values.
-    //psllw - Logically left shifts 8 16bit values.
-    //psrad - Arithmetically right shifts 4 32bit values.
-    //psraw - Arithmetically right shifts 8 16bit values.
-    //psrldq - Logically right shifts 1 128bit values.
-    //psrlq - Logically right shifts 2 64bit values.
-    //psrld - Logically right shifts 4 32bit values.
-    //psrlw - Logically right shifts 8 16bit values.
-    //pxor - Logically XORs 2 128bit registers.
-    //orpd - Logically ORs 2 64bit doubles.
-    //xorpd - Logically XORs 2 64bit doubles.
-    //
-    //Compare:
-    //cmppd - Compares 2 pairs of 64bit doubles.
-    //cmpsd - Compares bottom 64bit doubles.
-    //comisd - Compares bottom 64bit doubles and stores result in EFLAGS.
-    //ucomisd - Compares bottom 64bit doubles and stores result in EFLAGS. (QNaNs don't throw exceptions with ucomisd, unlike comisd.
-    //pcmpxxb - Compares 16 8bit integers.
-    //pcmpxxw - Compares 8 16bit integers.
-    //pcmpxxd - Compares 4 32bit integers.
-    //Compare Codes (the xx parts above):
-    //eq - Equal to.
-    //lt - Less than.
-    //le - Less than or equal to.
-    //ne - Not equal.
-    //nlt - Not less than.
-    //nle - Not less than or equal to.
-    //ord - Ordered.
-    //unord - Unordered.
-
-    /// pcmpeqb - Compares 16 8bit integers.
-    byte16 pcmpeqb(byte16 v1, byte16 v2)
+    public
     {
-        version(DigitalMars)
+        version(none) // unsupported by llvm
+        /// andnpd - Logically NOT ANDs 2 64bit doubles.
+        double2 andnpd(double2 v1, double2 v2)
         {
-            return __simd(XMM.PCMPEQB, v1, v2);
+            version(DigitalMars)
+            {
+                return __simd(XMM.ANDNPD, v1, v2);
+            }
+            else version(GNU)
+            {
+                return __builtin_ia32_andnpd(v1, v2);
+            }
+            else version(LDC)
+            {
+                return __builtin_ia32_andnpd(v1, v2);
+            }
+            else
+            {
+                static assert(false, "Unsupported on this architecture");
+            }
         }
-        else version(GNU)
+
+        version(none) // unsupported by llvm
+        /// Example:
+        unittest
         {
-            return __builtin_ia32_pcmpeqb128(v1, v2);
+            double2 a = [3, 0];
+            double2 b = [3, 4];
+            // ~a[i] && b[i]
+            auto c = andnpd(a, b);
+            assert(c.array == [0, 4]);
         }
-        else version(LDC)
+
+        version(none) // unsupported by llvm
+        /// andnps - Logically NOT ANDs 4 32bit singles.
+        float4 andnps(float4 v1, float4 v2)
         {
-            return equalMask!byte16(v1, v2);
+            version(DigitalMars)
+            {
+                return __simd(XMM.ANDNPS, v1, v2);
+            }
+            else version(GNU)
+            {
+                return __builtin_ia32_andnps(v1, v2);
+            }
+            else version(LDC)
+            {
+                return __builtin_ia32_andnps(v1, v2);
+            }
+            else
+            {
+                static assert(false, "Unsupported on this architecture");
+            }
         }
-        else
+
+        version(none) // unsupported by llvm
+        /// Example:
+        unittest
         {
-            static assert(0, "Unsupported on this architecture");
+            float4 a = [3, 0, 0, 0];
+            float4 b = [3, 4, 0, 0];
+            // ~a[i] && b[i]
+            auto c = andnps(a, b);
+            assert(c.array == [0, 4, 0, 0]);
+        }
+
+        version(none) // unsupported by llvm
+        /// andpd - Logically ANDs 2 64bit doubles.
+        double2 andpd(double2 v1, double2 v2)
+        {
+            version(DigitalMars)
+            {
+                return __simd(XMM.ANDPD, v1, v2);
+            }
+            else version(GNU)
+            {
+                return __builtin_ia32_andpd(v1, v2);
+            }
+            else version(LDC)
+            {
+                return v1 & v2;
+            }
+            else
+            {
+                static assert(false, "Unsupported on this architecture");
+            }
+        }
+
+        version(none) // unsupported by llvm
+        /// Example:
+        unittest
+        {
+            double2 a = [3, 0];
+            double2 b = [3, 4];
+            auto c = andpd(a, b);
+            assert(c.array == [3, 0]);
+        }
+
+        //pand - Logically ANDs 2 128bit registers.
+        void16 pand(void16 v1, void16 v2)
+        {
+            version(DigitalMars)
+            {
+                return __simd(XMM.PAND, v1, v2);
+            }
+            else version(GNU)
+            {
+                return __builtin_ia32_pand128(v1, v2);
+            }
+            else version(LDC)
+            {
+                return cast(ubyte16)v1 & cast(ubyte16)v2;
+            }
+            else
+            {
+                static assert(false, "Unsupported on this architecture");
+            }
+        }
+
+        /// Example:
+        unittest
+        {
+            int4 a = [2, 6, 0, 1];
+            int4 b = [3, 4, 0, 2];
+            int4 c = pand(a, b);
+            assert(c.array == [2, 4, 0, 0]);
+        }
+
+        version(none) // unsupported by llvm
+        //pandn - Logically Inverts the first 128bit operand and ANDs with the second.
+        void16 pandn(void16 v1, void16 v2)
+        {
+            version(DigitalMars)
+            {
+                return __simd(XMM.PANDN, v1, v2);
+            }
+            else version(GNU)
+            {
+                return __builtin_ia32_pandn128(v1, v2);
+            }
+            else version(LDC)
+            {
+                return __builtin_ia32_pandn(v1, v2);
+            }
+            else
+            {
+                static assert(false, "Unsupported on this architecture");
+            }
+        }
+
+        version(none) // unsupported by llvm
+        /// Example:
+        unittest
+        {
+            int4 a = [2, 6, 0, 1];
+            int4 b = [3, 4, 0, 2];
+            // ~a[i] && b[i]
+            int4 c = pand(a, b);
+            assert(c.array == [2, 4, 0, 0]);
+        }
+
+        /// por - Logically ORs 2 128bit registers.
+        void16 por(void16 v1, void16 v2)
+        {
+            version(DigitalMars)
+            {
+                return __simd(XMM.POR, v1, v2);
+            }
+            else version(GNU)
+            {
+                return __builtin_ia32_por128(v1, v2);
+            }
+            else version(LDC)
+            {
+                return cast(ubyte16)v1 | cast(ubyte16)v2;
+            }
+            else
+            {
+                static assert(false, "Unsupported on this architecture");
+            }
+        }
+
+        /// Example:
+        unittest
+        {
+            int4 a = [2, 2, 0, 1];
+            int4 b = [3, 4, -1, 2];
+            int4 c = por(a, b);
+            assert(c.array == [3, 6, -1, 3]);
+        }
+
+        //pslldq - Logically left shifts 1 128bit value.
+        //psllq - Logically left shifts 2 64bit values.
+        //pslld - Logically left shifts 4 32bit values.
+        //psllw - Logically left shifts 8 16bit values.
+        //psrad - Arithmetically right shifts 4 32bit values.
+        //psraw - Arithmetically right shifts 8 16bit values.
+        //psrldq - Logically right shifts 1 128bit values.
+        //psrlq - Logically right shifts 2 64bit values.
+        //psrld - Logically right shifts 4 32bit values.
+        //psrlw - Logically right shifts 8 16bit values.
+        //pxor - Logically XORs 2 128bit registers.
+        /// por - Logically ORs 2 128bit registers.
+        void16 pxor(void16 v1, void16 v2)
+        {
+            version(DigitalMars)
+            {
+                return __simd(XMM.PXOR, v1, v2);
+            }
+            else version(GNU)
+            {
+                return __builtin_ia32_pxor128(v1, v2);
+            }
+            else version(LDC)
+            {
+                return cast(ubyte16)v1 ^ cast(ubyte16)v2;
+            }
+            else
+            {
+                static assert(false, "Unsupported on this architecture");
+            }
+        }
+
+        /// Example:
+        unittest
+        {
+            int4 a = [2, 2, 0, 1];
+            int4 b = [3, 4, -1, 2];
+            int4 c = pxor(a, b);
+            assert(c.array == [1, 6, -1, 3]);
+        }
+
+        //orpd - Logically ORs 2 64bit doubles.
+        //xorpd - Logically XORs 2 64bit doubles.
+    }
+
+    //Compare double:
+    public
+    {
+        /++
+        cmpxxpd - Compares 2 pairs of 64bit doubles.
+        eq - Equal to.
+        lt - Less than.
+        le - Less than or equal to.
+        ne - Not equal.
+        nlt - Not less than.
+        nle - Not less than or equal to.
+        ord - Ordered.
+        unord - Unordered.
+        +/
+        private long2 cmpeqpd(double2 v1, double2 v2)
+        {
+            version(DigitalMars)
+            {
+                return __simd(XMM.CMPPD, v1, v2, CmpPXImm.EQ);
+            }
+            else version(GNU)
+            {
+                return __builtin_ia32_cmpeqpd(v1, v2);
+            }
+            else version(LDC)
+            {
+                return __builtin_ia32_cmppd(v1, v2, CmpPXImm.EQ);
+            }
+            else
+            {
+                static assert(false, "Unsupported on this architecture");
+            }
+        }
+
+        /// Example:
+        unittest
+        {
+            double2 a = [double.nan, 4];
+            double2 b = [3, 4];
+            long2 c = cmpeqpd(a, b);
+            assert(c.array == [0, -1]);
+        }
+
+        /// ditto
+        private long2 cmpltpd(double2 v1, double2 v2)
+        {
+            version(DigitalMars)
+            {
+                return __simd(XMM.CMPPD, v1, v2, CmpPXImm.LT);
+            }
+            else version(GNU)
+            {
+                return __builtin_ia32_cmpltpd(v1, v2);
+            }
+            else version(LDC)
+            {
+                return __builtin_ia32_cmppd(v1, v2, CmpPXImm.LT);
+            }
+            else
+            {
+                static assert(false, "Unsupported on this architecture");
+            }
+        }
+
+        /// Example:
+        unittest
+        {
+            double2 a = [double.nan, 4];
+            double2 b = [3, 4];
+            long2 c = cmpltpd(a, b);
+            assert(c.array == [0, 0]);
+        }
+
+        /// ditto
+        private long2 cmplepd(double2 v1, double2 v2)
+        {
+            version(DigitalMars)
+            {
+                return __simd(XMM.CMPPD, v1, v2, CmpPXImm.LE);
+            }
+            else version(GNU)
+            {
+                return __builtin_ia32_cmplepd(v1, v2);
+            }
+            else version(LDC)
+            {
+                return __builtin_ia32_cmppd(v1, v2, CmpPXImm.LE);
+            }
+            else
+            {
+                static assert(false, "Unsupported on this architecture");
+            }
+        }
+
+        /// Example:
+        unittest
+        {
+            double2 a = [double.nan, 4];
+            double2 b = [3, 4];
+            long2 c = cmplepd(a, b);
+            assert(c.array == [0, -1]);
+        }
+
+        /// ditto
+        private long2 cmpneqpd(double2 v1, double2 v2)
+        {
+            version(DigitalMars)
+            {
+                return __simd(XMM.CMPPD, v1, v2, CmpPXImm.NEQ);
+            }
+            else version(GNU)
+            {
+                return __builtin_ia32_cmpneqpd(v1, v2);
+            }
+            else version(LDC)
+            {
+                return __builtin_ia32_cmppd(v1, v2, CmpPXImm.NEQ);
+            }
+            else
+            {
+                static assert(false, "Unsupported on this architecture");
+            }
+        }
+
+        /// Example:
+        unittest
+        {
+            double2 a = [double.nan, 4];
+            double2 b = [3, 4];
+            long2 c = cmpneqpd(a, b);
+            assert(c.array == [-1, 0]);
+        }
+
+        /// ditto
+        private long2 cmpnltpd(double2 v1, double2 v2)
+        {
+            version(DigitalMars)
+            {
+                return __simd(XMM.CMPPD, v1, v2, CmpPXImm.NLT);
+            }
+            else version(GNU)
+            {
+                return __builtin_ia32_cmpnltpd(v1, v2);
+            }
+            else version(LDC)
+            {
+                return __builtin_ia32_cmppd(v1, v2, CmpPXImm.NLT);
+            }
+            else
+            {
+                static assert(false, "Unsupported on this architecture");
+            }
+        }
+
+        /// Example:
+        unittest
+        {
+            double2 a = [double.nan, 4];
+            double2 b = [3, 4];
+            long2 c = cmpnltpd(a, b);
+            assert(c.array == [-1, -1]);
+        }
+
+        /// ditto
+        private long2 cmpnlepd(double2 v1, double2 v2)
+        {
+            version(DigitalMars)
+            {
+                return __simd(XMM.CMPPD, v1, v2, CmpPXImm.NLE);
+            }
+            else version(GNU)
+            {
+                return __builtin_ia32_cmpnlepd(v1, v2);
+            }
+            else version(LDC)
+            {
+                return __builtin_ia32_cmppd(v1, v2, CmpPXImm.NLE);
+            }
+            else
+            {
+                static assert(false, "Unsupported on this architecture");
+            }
+        }
+
+        /// Example:
+        unittest
+        {
+            double2 a = [double.nan, 4];
+            double2 b = [3, 5];
+            long2 c = cmpnlepd(a, b);
+            assert(c.array == [-1, 0]);
+        }
+
+        /// ditto
+        private long2 cmpordpd(double2 v1, double2 v2)
+        {
+            version(DigitalMars)
+            {
+                return __simd(XMM.CMPPD, v1, v2, CmpPXImm.ORD);
+            }
+            else version(GNU)
+            {
+                return __builtin_ia32_cmpordpd(v1, v2);
+            }
+            else version(LDC)
+            {
+                return __builtin_ia32_cmppd(v1, v2, CmpPXImm.ORD);
+            }
+            else
+            {
+                static assert(false, "Unsupported on this architecture");
+            }
+        }
+
+        /// Example:
+        unittest
+        {
+            double2 a = [double.nan, 4];
+            double2 b = [3, 4];
+            long2 c = cmpordpd(a, b);
+            assert(c.array == [0, -1]);
+        }
+
+        /// ditto
+        private long2 cmpunordpd(double2 v1, double2 v2)
+        {
+            version(DigitalMars)
+            {
+                return __simd(XMM.CMPPD, v1, v2, CmpPXImm.UNORD);
+            }
+            else version(GNU)
+            {
+                return __builtin_ia32_cmpunordpd(v1, v2);
+            }
+            else version(LDC)
+            {
+                return __builtin_ia32_cmppd(v1, v2, CmpPXImm.UNORD);
+            }
+            else
+            {
+                static assert(false, "Unsupported on this architecture");
+            }
+        }
+
+        /// Example:
+        unittest
+        {
+            double2 a = [double.nan, 4];
+            double2 b = [3, 4];
+            long2 c = cmpunordpd(a, b);
+            assert(c.array == [-1, 0]);
+        }
+
+        //cmpsd - Compares bottom 64bit doubles.
+        //comisd - Compares bottom 64bit doubles and stores result in EFLAGS.
+        //ucomisd - Compares bottom 64bit doubles and stores result in EFLAGS. (QNaNs don't throw exceptions with ucomisd, unlike comisd.
+    }
+
+    //Compare int types:
+    public
+    {
+        /++
+        pcmpxxb - Compares 16 8bit integers.
+        pcmpxxw - Compares 8 16bit integers.
+        pcmpxxd - Compares 4 32bit integers.
+        Compare Codes (the xx parts above):
+            eq - Equal to.
+            gt - greater than.
+        +/
+        byte16 pcmpeqb(byte16 v1, byte16 v2)
+        {
+            version(DigitalMars)
+            {
+                return __simd(XMM.PCMPEQB, v1, v2);
+            }
+            else version(GNU)
+            {
+                return __builtin_ia32_pcmpeqb128(v1, v2);
+            }
+            else version(LDC)
+            {
+                return equalMask!byte16(v1, v2);
+            }
+            else
+            {
+                static assert(0, "Unsupported on this architecture");
+            }
+        }
+
+        /// Example:
+        unittest
+        {
+            byte16 a = [1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+            byte16 b = [1, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1];
+            auto c = pcmpeqb(a, b);
+            assert(c.array == [-1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1]);
+        }
+
+        /// ditto
+        byte16 pcmpgtb(byte16 v1, byte16 v2)
+        {
+            version(DigitalMars)
+            {
+                return __simd(XMM.PCMPGTB, v1, v2);
+            }
+            else version(GNU)
+            {
+                return __builtin_ia32_pcmpgtb128(v1, v2);
+            }
+            else version(LDC)
+            {
+                return greaterMask!byte16(v1, v2);
+            }
+            else
+            {
+                static assert(0, "Unsupported on this architecture");
+            }
+        }
+
+        /// Example:
+        unittest
+        {
+            byte16 a = [2, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1];
+            byte16 b = [1, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1];
+            auto c = pcmpgtb(a, b);
+            assert(c.array == [-1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+        }
+
+        /// ditto
+        short8 pcmpeqw(short8 v1, short8 v2)
+        {
+            version(DigitalMars)
+            {
+                return __simd(XMM.PCMPEQW, v1, v2);
+            }
+            else version(GNU)
+            {
+                return __builtin_ia32_pcmpeqw128(v1, v2);
+            }
+            else version(LDC)
+            {
+                return equalMask!short8(v1, v2);
+            }
+            else
+            {
+                static assert(0, "Unsupported on this architecture");
+            }
+        }
+
+        /// Example:
+        unittest
+        {
+            short8 a = [1, 2, 1, 1, 1, 1, 1, 1];
+            short8 b = [1, 2, 0, 0, 0, 0, 0, 1];
+            auto c = pcmpeqw(a, b);
+            assert(c.array == [-1, -1, 0, 0, 0, 0, 0, -1]);
+        }
+
+        /// ditto
+        short8 pcmpgtw(short8 v1, short8 v2)
+        {
+            version(DigitalMars)
+            {
+                return __simd(XMM.PCMPGTW, v1, v2);
+            }
+            else version(GNU)
+            {
+                return __builtin_ia32_pcmpgtw128(v1, v2);
+            }
+            else version(LDC)
+            {
+                return greaterMask!short8(v1, v2);
+            }
+            else
+            {
+                static assert(0, "Unsupported on this architecture");
+            }
+        }
+
+        /// Example:
+        unittest
+        {
+            short8 a = [2, 3, 0, 0, 0, 0, 0, 1];
+            short8 b = [1, 2, 0, 0, 0, 0, 0, 1];
+            auto c = pcmpgtw(a, b);
+            assert(c.array == [-1, -1, 0, 0, 0, 0, 0, 0]);
+        }
+
+        /// ditto
+        int4 pcmpeqd(int4 v1, int4 v2)
+        {
+            version(DigitalMars)
+            {
+                return __simd(XMM.PCMPEQD, v1, v2);
+            }
+            else version(GNU)
+            {
+                return __builtin_ia32_pcmpeqd128(v1, v2);
+            }
+            else version(LDC)
+            {
+                return equalMask!int4(v1, v2);
+            }
+            else
+            {
+                static assert(0, "Unsupported on this architecture");
+            }
+        }
+
+        /// Example:
+        unittest
+        {
+            int4 a = [1, 2, 1, 1];
+            int4 b = [1, 2, 0, 1];
+            auto c = pcmpeqd(a, b);
+            assert(c.array == [-1, -1, 0, -1]);
+        }
+
+        /// ditto
+        int4 pcmpgtd(int4 v1, int4 v2)
+        {
+            version(DigitalMars)
+            {
+                return __simd(XMM.PCMPGTD, v1, v2);
+            }
+            else version(GNU)
+            {
+                return __builtin_ia32_pcmpgtd128(v1, v2);
+            }
+            else version(LDC)
+            {
+                return greaterMask!int4(v1, v2);
+            }
+            else
+            {
+                static assert(0, "Unsupported on this architecture");
+            }
+        }
+
+        /// Example:
+        unittest
+        {
+            int4 a = [2, 3, 0, 1];
+            int4 b = [1, 2, 0, 1];
+            auto c = pcmpgtd(a, b);
+            assert(c.array == [-1, -1, 0, 0]);
         }
     }
 
-    /// Example:
-    unittest
-    {
-        byte16 a = [1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
-        byte16 b = [1, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1];
-        auto c = pcmpeqb(a, b);
-        assert(c.array == [-1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1]);
-    }
-
-    //
     //Conversion:
     //cvtdq2pd - Converts 2 32bit integers into 2 64bit doubles.
     //cvtdq2ps - Converts 4 32bit integers into 4 32bit singles.
@@ -673,7 +2217,7 @@ static:
     //cvttps2pi - Converts 2 32bit singles to 2 32bit integers using truncation into an MMX register.
     //cvttsd2si - Converts a 64bit double to a 32bit integer using truncation into a GPR.
     //cvttss2si - Converts a 32bit single to a 32bit integer using truncation into a GPR.
-    //
+
     //Load/Store:
     //(is "minimize cache pollution" the same as "without using cache"??)
     //movq - Moves a 64bit value, clearing the top 64bits of an XMM register.
@@ -695,7 +2239,7 @@ static:
         version(DigitalMars)
         {
             version(none) // Should be like this
-                return __simd(XMM.PCMPEQB, v);
+                return __simd_scalar(XMM.PCMPEQB, v);
 
             version(D_InlineAsm_X86_64)
             {
@@ -736,7 +2280,6 @@ static:
         assert(mask == 0b1000000000000011);
     }
 
-    //
     //Shuffling:
     //pshufd - Shuffles 32bit values in a complex way.
     //pshufhw - Shuffles high 16bit values in a complex way.
@@ -754,14 +2297,13 @@ static:
     //packssdw - Packs 32bit integers to 16bit integers using saturation.
     //packsswb - Packs 16bit integers to 8bit integers using saturation.
     //packuswb - Packs 16bit integers to 8bit unsigned integers unsing saturation.
-    //
+
     //Cache Control:
     //clflush - Flushes a Cache Line from all levels of cache.
     //lfence - Guarantees that all memory loads issued before the lfence instruction are completed before anyloads after the lfence instruction.
     //mfence - Guarantees that all memory reads and writes issued before the mfence instruction are completed before any reads or writes after the mfence instruction.
     //pause - Pauses execution for a set amount of time.
 
-    //version(none)
     unittest
     {
 
@@ -837,9 +2379,9 @@ static:
                 ubyte16 r3 = pcmpeqb(ptr16[2], niddles);
                 ubyte16 r4 = pcmpeqb(ptr16[3], niddles);
 
-                r3 = pmaxub(r1, r3);
-                r4 = pmaxub(r2, r4);
-                r4 = pmaxub(r3, r4);
+                r3 = sse.pmaxub(r1, r3);
+                r4 = sse.pmaxub(r2, r4);
+                r4 = sse.pmaxub(r3, r4);
                 mask = pmovmskb(r4);
 
                 if (mask != 0)
