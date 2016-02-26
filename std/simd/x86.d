@@ -1,27 +1,36 @@
 /// Unified SIMD intrinsics for x86 and x86_64 architecture
 module std.simd.x86;
 
+public import core.simd;
+
 version(X86)
 {
     version(DigitalMars)
         version = NoSIMD; // DMD-x86 does not support SIMD
     else
-        version = X86_OR_X64;
+        version = X86_SIMD;
 }
 else version(X86_64)
 {
-    version = X86_OR_X64;
+    version = X86_SIMD;
 }
 
-version(X86_OR_X64):
+version(X86_SIMD)
+{
+    enum isAvailable = true;
+}
+else
+{
+    enum isAvailable = false;
+}
+
+version(X86_SIMD):
 
 version(GNU)
 {
     // GDC intrinsics
     import gcc.builtins;
 }
-
-public import core.simd;
 
 version(LDC)
 {
@@ -1761,7 +1770,7 @@ static:
         ord - Ordered.
         unord - Unordered.
         +/
-        private long2 cmpeqpd(double2 v1, double2 v2)
+        long2 cmpeqpd(double2 v1, double2 v2)
         {
             version(DigitalMars)
             {
@@ -1791,7 +1800,7 @@ static:
         }
 
         /// ditto
-        private long2 cmpltpd(double2 v1, double2 v2)
+        long2 cmpltpd(double2 v1, double2 v2)
         {
             version(DigitalMars)
             {
@@ -1821,7 +1830,7 @@ static:
         }
 
         /// ditto
-        private long2 cmplepd(double2 v1, double2 v2)
+        long2 cmplepd(double2 v1, double2 v2)
         {
             version(DigitalMars)
             {
@@ -1851,7 +1860,7 @@ static:
         }
 
         /// ditto
-        private long2 cmpneqpd(double2 v1, double2 v2)
+        long2 cmpneqpd(double2 v1, double2 v2)
         {
             version(DigitalMars)
             {
@@ -1881,7 +1890,7 @@ static:
         }
 
         /// ditto
-        private long2 cmpnltpd(double2 v1, double2 v2)
+        long2 cmpnltpd(double2 v1, double2 v2)
         {
             version(DigitalMars)
             {
@@ -1911,7 +1920,7 @@ static:
         }
 
         /// ditto
-        private long2 cmpnlepd(double2 v1, double2 v2)
+        long2 cmpnlepd(double2 v1, double2 v2)
         {
             version(DigitalMars)
             {
@@ -1941,7 +1950,7 @@ static:
         }
 
         /// ditto
-        private long2 cmpordpd(double2 v1, double2 v2)
+        long2 cmpordpd(double2 v1, double2 v2)
         {
             version(DigitalMars)
             {
@@ -1971,7 +1980,7 @@ static:
         }
 
         /// ditto
-        private long2 cmpunordpd(double2 v1, double2 v2)
+        long2 cmpunordpd(double2 v1, double2 v2)
         {
             version(DigitalMars)
             {
