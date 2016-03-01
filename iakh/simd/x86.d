@@ -1,5 +1,5 @@
 /// Unified SIMD intrinsics for x86 and x86_64 architecture
-module std.simd.x86;
+module iakh.simd.x86;
 
 public import core.simd;
 
@@ -561,55 +561,262 @@ static:
     //orps - Logically ORs 4 single-precision values with 4 other single-precision values.
     //xorps - Logically XORs 4 single-precision values with 4 other single-precision values.
 
-    //Compare:
+    //Compare float:
     public
     {
-        //cmpxxps - Compares 4 single-precision values.
-        /// cmpps - Compares 4 pairs of 32bit floats.
-        version(none)
-            int4 cmpps(CmpPXImm imm)(float4 v1, float4 v2)
+        /++
+        cmpxxps - Compares 4 pairs of 32bit floats.
+        eq - Equal to.
+        lt - Less than.
+        le - Less than or equal to.
+        ne - Not equal.
+        nlt - Not less than.
+        nle - Not less than or equal to.
+        ord - Ordered.
+        unord - Unordered.
+        +/
+        int4 cmpeqps(float4 v1, float4 v2)
+        {
+            version(DigitalMars)
             {
-                version(DigitalMars)
-                {
-                    return __simd(XMM.CMPPS, v1, v2, imm);
-                }
-                else version(GNU)
-                {
-                    return __builtin_ia32_cmpps(v1, v2, imm);
-                }
-                else version(LDC)
-                {
-                    return __builtin_ia32_cmpps(v1, v2, imm);
-                }
-                else
-                {
-                    static assert(false, "Unsupported on this architecture");
-                }
+                return __simd(XMM.CMPPS, v1, v2, CmpPXImm.EQ);
             }
-
-        version(none)
-            /// Example:
-            unittest
+            else version(GNU)
             {
-                float4 a = [2, 5, 0, 0];
-                float4 b = [3, 4, 0, 0];
-                int4 c = cmpps!(CmpPXImm.LE)(a, b);
-                assert(c.array == [-1, 0, -1, -1]);
+                return __builtin_ia32_cmpeqps(v1, v2);
             }
+            else version(LDC)
+            {
+                return __builtin_ia32_cmpps(v1, v2, CmpPXImm.EQ);
+            }
+            else
+            {
+                static assert(false, "Unsupported on this architecture");
+            }
+        }
 
+        /// Example:
+        unittest
+        {
+            float4 a = [float.nan, 4, 1, 1];
+            float4 b = [3, 4, 0, 1];
+            int4 c = cmpeqps(a, b);
+            assert(c.array == [0, -1, 0, -1]);
+        }
+
+        /// ditto
+        int4 cmpltps(float4 v1, float4 v2)
+        {
+            version(DigitalMars)
+            {
+                return __simd(XMM.CMPPS, v1, v2, CmpPXImm.LT);
+            }
+            else version(GNU)
+            {
+                return __builtin_ia32_cmpltps(v1, v2);
+            }
+            else version(LDC)
+            {
+                return __builtin_ia32_cmpps(v1, v2, CmpPXImm.LT);
+            }
+            else
+            {
+                static assert(false, "Unsupported on this architecture");
+            }
+        }
+
+        /// Example:
+        unittest
+        {
+            float4 a = [float.nan, 4, 0, 1];
+            float4 b = [3, 4, 1, 1];
+            int4 c = cmpltps(a, b);
+            assert(c.array == [0, 0, -1, 0]);
+        }
+
+        /// ditto
+        int4 cmpleps(float4 v1, float4 v2)
+        {
+            version(DigitalMars)
+            {
+                return __simd(XMM.CMPPS, v1, v2, CmpPXImm.LE);
+            }
+            else version(GNU)
+            {
+                return __builtin_ia32_cmpleps(v1, v2);
+            }
+            else version(LDC)
+            {
+                return __builtin_ia32_cmpps(v1, v2, CmpPXImm.LE);
+            }
+            else
+            {
+                static assert(false, "Unsupported on this architecture");
+            }
+        }
+
+        /// Example:
+        unittest
+        {
+            float4 a = [float.nan, 4, 0, 2];
+            float4 b = [3, 4, 0, 1];
+            int4 c = cmpleps(a, b);
+            assert(c.array == [0, -1, -1, 0]);
+        }
+
+        /// ditto
+        int4 cmpneqps(float4 v1, float4 v2)
+        {
+            version(DigitalMars)
+            {
+                return __simd(XMM.CMPPS, v1, v2, CmpPXImm.NEQ);
+            }
+            else version(GNU)
+            {
+                return __builtin_ia32_cmpneqps(v1, v2);
+            }
+            else version(LDC)
+            {
+                return __builtin_ia32_cmpps(v1, v2, CmpPXImm.NEQ);
+            }
+            else
+            {
+                static assert(false, "Unsupported on this architecture");
+            }
+        }
+
+        /// Example:
+        unittest
+        {
+            float4 a = [float.nan, 4, 0, 0];
+            float4 b = [3, 4, 0, 1];
+            int4 c = cmpneqps(a, b);
+            assert(c.array == [-1, 0, 0, -1]);
+        }
+
+        /// ditto
+        int4 cmpnltps(float4 v1, float4 v2)
+        {
+            version(DigitalMars)
+            {
+                return __simd(XMM.CMPPS, v1, v2, CmpPXImm.NLT);
+            }
+            else version(GNU)
+            {
+                return __builtin_ia32_cmpnltps(v1, v2);
+            }
+            else version(LDC)
+            {
+                return __builtin_ia32_cmpps(v1, v2, CmpPXImm.NLT);
+            }
+            else
+            {
+                static assert(false, "Unsupported on this architecture");
+            }
+        }
+
+        /// Example:
+        unittest
+        {
+            float4 a = [float.nan, 4, 0, 2];
+            float4 b = [3, 4, 1, 1];
+            int4 c = cmpnltps(a, b);
+            assert(c.array == [-1, -1, 0, -1]);
+        }
+
+        /// ditto
+        int4 cmpnleps(float4 v1, float4 v2)
+        {
+            version(DigitalMars)
+            {
+                return __simd(XMM.CMPPS, v1, v2, CmpPXImm.NLE);
+            }
+            else version(GNU)
+            {
+                return __builtin_ia32_cmpnleps(v1, v2);
+            }
+            else version(LDC)
+            {
+                return __builtin_ia32_cmpps(v1, v2, CmpPXImm.NLE);
+            }
+            else
+            {
+                static assert(false, "Unsupported on this architecture");
+            }
+        }
+
+        /// Example:
+        unittest
+        {
+            float4 a = [float.nan, 4, 0, 2];
+            float4 b = [3, 5, 0, 1];
+            int4 c = cmpnleps(a, b);
+            assert(c.array == [-1, 0, 0, -1]);
+        }
+
+        /// ditto
+        int4 cmpordps(float4 v1, float4 v2)
+        {
+            version(DigitalMars)
+            {
+                return __simd(XMM.CMPPS, v1, v2, CmpPXImm.ORD);
+            }
+            else version(GNU)
+            {
+                return __builtin_ia32_cmpordps(v1, v2);
+            }
+            else version(LDC)
+            {
+                return __builtin_ia32_cmpps(v1, v2, CmpPXImm.ORD);
+            }
+            else
+            {
+                static assert(false, "Unsupported on this architecture");
+            }
+        }
+
+        /// Example:
+        unittest
+        {
+            float4 a = [float.nan, 4, 1, -1];
+            float4 b = [3, 4, 0, 1];
+            int4 c = cmpordps(a, b);
+            assert(c.array == [0, -1, -1, -1]);
+        }
+
+        /// ditto
+        int4 cmpunordps(float4 v1, float4 v2)
+        {
+            version(DigitalMars)
+            {
+                return __simd(XMM.CMPPS, v1, v2, CmpPXImm.UNORD);
+            }
+            else version(GNU)
+            {
+                return __builtin_ia32_cmpunordps(v1, v2);
+            }
+            else version(LDC)
+            {
+                return __builtin_ia32_cmpps(v1, v2, CmpPXImm.UNORD);
+            }
+            else
+            {
+                static assert(false, "Unsupported on this architecture");
+            }
+        }
+
+        /// Example:
+        unittest
+        {
+            float4 a = [float.nan, 4, float.infinity, 1];
+            float4 b = [3, 4, float.infinity, float.nan];
+            int4 c = cmpunordps(a, b);
+            assert(c.array == [-1, 0, 0, -1]);
+        }
 
         //cmpxxss - Compares lowest 2 single-precision values.
         //comiss - Compares lowest 2 single-recision values and stores result in EFLAGS.
         //ucomiss - Compares lowest 2 single-precision values and stores result in EFLAGS. (QNaNs don't throw exceptions with ucomiss, unlike comiss.)
-        //Compare Codes (the xx parts above):
-        //eq - Equal to.
-        //lt - Less than.
-        //le - Less than or equal to.
-        //ne - Not equal.
-        //nlt - Not less than.
-        //nle - Not less than or equal to.
-        //ord - Ordered.
-        //unord - Unordered.
     }
 
     //Conversion:
@@ -1517,6 +1724,53 @@ static:
         //pmuludq - Multiplies 2 32bit pairs and stores 2 64bit results.
     }
 
+    /// pmovmskb - Generates a 16bit Mask from the sign bits of each byte in an XMM register.
+    int pmovmskb(byte16 v)
+    {
+        version(DigitalMars)
+        {
+            version(none) // Should be like this
+                return __simd_scalar(XMM.PMOVMSKB, v);
+
+            version(D_InlineAsm_X86_64)
+            {
+                asm
+                {
+                    naked;
+                    pmovmskb EAX, XMM0;
+                    ret;
+                }
+            }
+            else
+            {
+                static assert(false, "Unsupported on this architecture");
+            }
+        }
+        else version(GNU)
+        {
+            return __builtin_ia32_pmovmskb128(v);
+        }
+        else version(LDC)
+        {
+            return __builtin_ia32_pmovmskb128(v);
+        }
+        else
+        {
+            static assert(false, "Unsupported on this architecture");
+        }
+    }
+
+    /// Example:
+    unittest
+    {
+        byte16 a = [1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+        byte16 b = [1, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1];
+        auto c = pcmpeqb(a, b);
+        auto mask = pmovmskb(c);
+
+        assert(mask == 0b1000000000000011);
+    }
+
     //Logic:
     public
     {
@@ -1711,18 +1965,7 @@ static:
             assert(c.array == [3, 6, -1, 3]);
         }
 
-        //pslldq - Logically left shifts 1 128bit value.
-        //psllq - Logically left shifts 2 64bit values.
-        //pslld - Logically left shifts 4 32bit values.
-        //psllw - Logically left shifts 8 16bit values.
-        //psrad - Arithmetically right shifts 4 32bit values.
-        //psraw - Arithmetically right shifts 8 16bit values.
-        //psrldq - Logically right shifts 1 128bit values.
-        //psrlq - Logically right shifts 2 64bit values.
-        //psrld - Logically right shifts 4 32bit values.
-        //psrlw - Logically right shifts 8 16bit values.
-        //pxor - Logically XORs 2 128bit registers.
-        /// por - Logically ORs 2 128bit registers.
+        /// pxor - Logically XORs 2 128bit registers.
         void16 pxor(void16 v1, void16 v2)
         {
             version(DigitalMars)
@@ -1751,6 +1994,17 @@ static:
             int4 c = pxor(a, b);
             assert(c.array == [1, 6, -1, 3]);
         }
+
+        //pslldq - Logically left shifts 1 128bit value.
+        //psllq - Logically left shifts 2 64bit values.
+        //pslld - Logically left shifts 4 32bit values.
+        //psllw - Logically left shifts 8 16bit values.
+        //psrad - Arithmetically right shifts 4 32bit values.
+        //psraw - Arithmetically right shifts 8 16bit values.
+        //psrldq - Logically right shifts 1 128bit values.
+        //psrlq - Logically right shifts 2 64bit values.
+        //psrld - Logically right shifts 4 32bit values.
+        //psrlw - Logically right shifts 8 16bit values.
 
         //orpd - Logically ORs 2 64bit doubles.
         //xorpd - Logically XORs 2 64bit doubles.
@@ -2242,53 +2496,6 @@ static:
     //movnti - Moves a 32bit value without using the cache.
     //maskmovdqu - Moves 16 bytes based on sign bits of another XMM register.
 
-    /// pmovmskb - Generates a 16bit Mask from the sign bits of each byte in an XMM register.
-    int pmovmskb(byte16 v)
-    {
-        version(DigitalMars)
-        {
-            version(none) // Should be like this
-                return __simd_scalar(XMM.PCMPEQB, v);
-
-            version(D_InlineAsm_X86_64)
-            {
-                asm
-                {
-                    naked;
-                    pmovmskb EAX, XMM0;
-                    ret;
-                }
-            }
-            else
-            {
-                static assert(false, "Unsupported on this architecture");
-            }
-        }
-        else version(GNU)
-        {
-            return __builtin_ia32_pmovmskb128(v);
-        }
-        else version(LDC)
-        {
-            return __builtin_ia32_pmovmskb128(v);
-        }
-        else
-        {
-            static assert(false, "Unsupported on this architecture");
-        }
-    }
-
-    /// Example:
-    unittest
-    {
-        byte16 a = [1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
-        byte16 b = [1, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1];
-        auto c = pcmpeqb(a, b);
-        auto mask = pmovmskb(c);
-
-        assert(mask == 0b1000000000000011);
-    }
-
     //Shuffling:
     //pshufd - Shuffles 32bit values in a complex way.
     //pshufhw - Shuffles high 16bit values in a complex way.
@@ -2439,4 +2646,184 @@ static:
 
         runSIMD();
     }
+}
+
+/// Namespace for sse3 intrinsics
+struct sse3
+{
+    //Arithmetic:
+    //addsubpd - Adds the top two doubles and subtracts the bottom two.
+    //addsubps - Adds top singles and subtracts bottom singles.
+    //haddpd - Top double is sum of top and bottom, bottom double is sum of second operand's top and bottom.
+    //haddps - Horizontal addition of single-precision values.
+    //hsubpd - Horizontal subtraction of double-precision values.
+    //hsubps - Horizontal subtraction of single-precision values.
+
+    //Load/Store:
+    //lddqu - Loads an unaligned 128bit value.
+    //movddup - Loads 64bits and duplicates it in the top and bottom halves of a 128bit register.
+    //movshdup - Duplicates the high singles into high and low singles.
+    //movsldup - Duplicates the low singles into high and low singles.
+    //fisttp - Converts a floating-point value to an integer using truncation.
+    //
+    //Process Control:
+    //monitor - Sets up a region to monitor for activity.
+    //mwait - Waits until activity happens in a region specified by monitor.
+
+}
+
+/// Namespace for ssse3 intrinsics
+struct s_sse3
+{
+    //Arithmetic:
+    //psignd - Gives 32bit integer magnitudes the sign of the 2nd operand.
+    //psignw - Gives 16bit integer magnitudes the sign of the 2nd operand.
+    //psignb - Gives 8bit integer magnitudes the sign of the 2nd operand.
+    //phaddd - Horizontal addition of unsigned 32bit integers.
+    //phaddw - Horizontal addition of unsigned 16bit integers.
+    //phaddsw - Horizontal saturated addition of 16bit integers.
+    //phsubd - Horizontal subtraction of unsigned 32bit integers.
+    //phsubw - Horizontal subtraction of unsigned 16bit integers.
+    //phsubsw - Horizontal saturated subtraction of 16bit words.
+    //pmaddubsw - Multiply-accumulate instruction (finally).
+    //pabsd - abs() for 32bit integers.
+    //pabsw - abs() for 16bit integers.
+    //pabsb - abs() for 8bit integers.
+    //pmulhrsw - 16bit integer multiplication, stores top 16bits of result.
+    //pshufb - Another complex shuffle instruction.
+    //palignr - Combines two register values, and extracts a register-width value from it, based on an offset.
+
+}
+
+/// Namespace for sse4.1 intrinsics
+struct sse4_1
+{
+static:
+    //mpsadbw - Sum of absolute differences.
+    //phminposuw - minimum+index extraction (16bit word).
+    //pmuldq - packed multiply.
+    //pmulld - packed multiply.
+    //dpps - dot product, single precision.
+    //dppd - dot product, double precision.
+    //blendps - conditional copy.
+    //blendpd - conditional copy.
+    //blendvps - conditional copy.
+    //blendvpd - conditional copy.
+
+    /// pblendvb - conditional copy: res[i] = mask[i] ? v[2] : v[1].
+    byte16 pblendvb(byte16 v1, byte16 v2, byte16 mask)
+    {
+        version(DigitalMars)
+        {
+            version(none)
+                return __simd(XMM.PBLENDVB, v2, v1, mask);
+            return sse2.pxor(v1, sse2.pand(mask, sse2.pxor(v1, v2)));
+        }
+        else version(GNU)
+        {
+            return __builtin_ia32_pblendvb128(v2, v1, mask);
+        }
+        else version(LDC)
+        {
+            return __builtin_ia32_pblendvb128(v2, v1, mask);
+        }
+        else
+        {
+            static assert(false, "Unsupported on this architecture");
+        }
+    }
+
+    /// Example:
+    unittest
+    {
+        int4 a = [2, 2, 1, 1];
+        int4 b = [3, 4, 5, 2];
+        int4 mask = [0, 0, -1, 0];
+        int4 c = pblendvb(a, b, mask);
+        assert(c.array == [2, 2, 5, 1]);
+    }
+
+    //pblendw - conditional copy.
+    //pminsb - packed minimum signed byte.
+    //pmaxsb - packed maximum signed byte.
+    //pminuw - packed minimum unsigned word.
+    //pmaxuw - packed maximum unsigned word.
+    //pminud - packed minimum unsigned dword.
+    //pmaxud - packed maximum unsigned dword.
+    //pminsd - packed minimum signed dword.
+    //pmaxsd - packed maximum signed dword.
+    //roundps - packed round single precision float to integer.
+    //roundss - scalar round single precision float to integer.
+    //roundpd - packed round double precision float to integer.
+    //roundsd - scalar round double precision float to integer.
+    //insertps - complex data shuffling.
+    //pinsrb - complex data shuffling.
+    //pinsrd - complex data shuffling.
+    //pinsrq - complex data shuffling.
+    //extractps - complex data shuffling.
+    //pextrb - complex data shuffling.
+    //pextrw - complex data shuffling.
+    //pextrd - complex data shuffling.
+    //pextrq - complex data shuffling.
+    //pmovsxbw - packed sign extension.
+    //pmovzxbw - packed zero extension.
+    //pmovsxbd - packed sign extension.
+    //pmovzxbd - packed zero extension.
+    //pmovsxbq - packed sign extension.
+    //pmovzxbq - packed zero extension.
+    //pmovxswd - packed sign extension.
+    //pmovzxwd - packed zero extension.
+    //pmovsxwq - packed sign extension.
+    //pmovzxwq - packed zero extension.
+    //pmovsxdq - packed sign extension.
+    //pmovzxdq - packed zero extension.
+    //ptest - same as test, but for sse registers.
+
+    /// pcmpeqq - quadword compare for equality.
+    byte16 pcmpeqq(long2 v1, long2 v2)
+    {
+        version(DigitalMars)
+        {
+            return __simd(XMM.PCMPEQQ, v1, v2);
+        }
+        else version(GNU)
+        {
+            return __builtin_ia32_pcmpeqq(v1, v2);
+        }
+        else version(LDC)
+        {
+            return equalMask!long2(v1, v2);
+        }
+        else
+        {
+            static assert(0, "Unsupported on this architecture");
+        }
+    }
+
+    //packusdw - saturating signed dwords to unsigned words.
+    //movntdqa - Non-temporal aligned move (this uses write-combining for efficiency).
+
+}
+
+/// Namespace for sse4.2 intrinsics
+struct sse4_2
+{
+    //crc32 - CRC32C function (using 0x11edc6f41 as the polynomial).
+    //pcmpestri - Packed compare explicit length string, Index.
+    //pcmpestrm - Packed compare explicit length string, Mask.
+    //pcmpistri - Packed compare implicit length string, Index.
+    //pcmpistrm - Packed compare implicit length string, Mask.
+    //pcmpgtq - Packed compare, greater than.
+    //popcnt - Population count.
+}
+
+/// Namespace for sse4a intrinsics
+struct sse4a
+{
+    //lzcnt - Leading Zero count.
+    //popcnt - Population count.
+    //extrq - Mask-shift operation.
+    //inserq - Mask-shift operation.
+    //movntsd - Non-temporal double precision move.
+    //movntss - Non-temporal single precision move.
 }

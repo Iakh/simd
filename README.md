@@ -16,3 +16,5 @@ Implementation plan:
  2. adequate 128bit support (sse, sse2)
  3. high level architecture/demo
  4. 5. ... mmx, 64bit and 256bit support, arm-neon etc.
+
+This library is distributed under Boost Software Licence. See the licence file.

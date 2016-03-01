@@ -5,17 +5,17 @@
     "configurations": [
         {
             "name": "test",
-            "sourcePaths": ["std"],
+            "sourcePaths": ["iakh"],
             "targetType": "library"
         }
     ],
     "importPaths": [
         "."
     ],
-    "name": "simd",
+    "name": "iakh_simd",
     "version": "0.0.1",
     "targetType": "sourceLibrary",
-    "license": "MIT",
+    "license": "Boost Software Lices v1.0",
     "copyright": "Copyright (c) 2016 Iakh Takh",
     "description": "SIMD library for the D programming language",
     "homepage": "https://github.com/Iakh/simd"
