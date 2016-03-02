@@ -38,6 +38,34 @@ version(LDC)
     import ldc.simd;
 }
 
+/+ This template mixin handles current compiler bugs. Pass string representation
+of code affected by bug. After template mixin write workaround. If your code will
+be compiled with fixed compiler, mixin shouldBeLikeThis will ask you to rewirite
+your code.
+
+Example:
+----
+mixin shouldBeLikeThis!("return __simd(XMM.PBLENDVB, v2, v1, mask);");
+return sse2.pxor(v1, sse2.pand(mask, sse2.pxor(v1, v2)));
+----
+
+Limitations: You may not know way how the bug will be fixed. Nevertheless this is
+good comment for bad workaronds.
+Can't handle low level bugs such as some(all?) llvm level bugs in ldc.
+
++/
+private mixin template shouldBeLikeThis(string code,
+                                        string sourceFile = __FILE__,
+                                        size_t sourceLine = __LINE__)
+{
+    static if(is(typeof((){mixin(code);})))
+    {
+        import std.format;
+        pragma(msg, "%s(%s):Error: code comiles".format(sourceFile, sourceLine));
+        static assert(false);
+    }
+}
+
 // Float point cmp immediate
 private enum CmpPXImm : byte
 {
@@ -1729,8 +1757,7 @@ static:
     {
         version(DigitalMars)
         {
-            version(none) // Should be like this
-                return __simd_scalar(XMM.PMOVMSKB, v);
+            mixin shouldBeLikeThis!("return __simd(XMM.PMOVMSKB, v);");
 
             version(D_InlineAsm_X86_64)
             {
@@ -2715,8 +2742,7 @@ static:
     {
         version(DigitalMars)
         {
-            version(none)
-                return __simd(XMM.PBLENDVB, v2, v1, mask);
+            mixin shouldBeLikeThis!("return __simd(XMM.PBLENDVB, v2, v1, mask);");
             return sse2.pxor(v1, sse2.pand(mask, sse2.pxor(v1, v2)));
         }
         else version(GNU)
@@ -2725,7 +2751,13 @@ static:
         }
         else version(LDC)
         {
-            return __builtin_ia32_pblendvb128(v2, v1, mask);
+            version(none) /* TODO: Replace LDC version with this.
+                             Can't be done now due to bug in llvm with this intrinsic.
+                             Can't be handled with mixin shouldBeLikeThis.
+                             */
+                return __builtin_ia32_pblendvb128(v2, v1, mask);
+
+            return sse2.pxor(v1, sse2.pand(mask, sse2.pxor(v1, v2)));
         }
         else
         {
