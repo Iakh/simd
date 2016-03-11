@@ -1,20 +1,23 @@
 SIMD
 ====
 
-std.simd alternative imlementation of std.simd ([Manu's one](https://github.com/TurkeyMan/simd))
+iakh.simd is an alternative imlementation of cross-platform/cross-compiler simd ([Manu's one](https://github.com/TurkeyMan/simd))
 
 Structure:
-* std.simd - processor independent intrinsics and some high level stuff.
-    * std.simd.x86 - unified (compiler independent) x86 intrinsic call.
-    * std.simd.arm - unified arm-based simd.
+----------
+* iakh.simd - processor independent intrinsics and some high level stuff.
+    * iakh.simd.x86 - unified (compiler independent) x86 intrinsic call.
+    * iakh.simd.arm - unified arm-based simd (not implemented).
 
-Since std.simd and submodules are overlapping functionality std.simd doesn't
-imports submodules(publicly).
+Implementation plan (evolvs):
+-----------------------------
+ * simdFind - demo with sse, sse2. (done)
+ * Implement Mask128Bit. Vector comparison. (done)
+ * Compile time SIMD version check.
+ * Fallback SIMD implementations.
+ * Implement Comprable!UInt.
+ * Define simd subset supported/emulated by all archs. High level design.
+ * Size independent vector/mask.
+ * ... 256bit support, arm-neon, PPC, etc.
 
-Implementation plan:
- 1. simdFind - demo with sse, sse2
- 2. adequate 128bit support (sse, sse2)
- 3. high level architecture/demo
- 4. 5. ... mmx, 64bit and 256bit support, arm-neon etc.
-
-This library is distributed under Boost Software Licence. See the licence file.
+This library is distributed under Boost Software Licence. See the [licence](LICENSE) file.
