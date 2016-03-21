@@ -3,32 +3,12 @@ module iakh.simd.x86;
 
 public import core.simd;
 
-version(X86)
-{
-    version(DigitalMars)
-        version = NoSIMD; // DMD-x86 does not support SIMD
-    else
-        version = X86_SIMD;
-}
-else version(X86_64)
-{
-    version = X86_SIMD;
-}
+import iakh.simd._version;
 
-version(X86_SIMD)
-{
-    enum isAvailable = true;
-}
-else
-{
-    enum isAvailable = false;
-}
-
-version(X86_SIMD):
+static if (x86SIMDVersion != X86SIMDVersion.None):
 
 version(GNU)
 {
-    // GDC intrinsics
     import gcc.builtins;
 }
 
@@ -2725,6 +2705,7 @@ struct s_sse3
 /// Namespace for sse4.1 intrinsics
 struct sse4_1
 {
+static if(x86SIMDVersion >= X86SIMDVersion.SSE4_1):
 static:
     //mpsadbw - Sum of absolute differences.
     //phminposuw - minimum+index extraction (16bit word).

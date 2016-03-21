@@ -5,12 +5,8 @@
     "configurations": [
         {
             "name": "test",
-            "sourcePaths": ["iakh"],
             "targetType": "library"
         }
-    ],
-    "importPaths": [
-        "."
     ],
     "name": "iakh_simd",
     "version": "0.0.1",

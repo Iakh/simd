@@ -3,14 +3,13 @@ Architecture independent high level SIMD wrapers.
 +/
 module iakh.simd;
 
-import iakh.simd.x86;
-
 import std.range;
 import std.traits : isSIMDVector;
 
-enum SIMDArch : int {NoSIMD, X86};
+import iakh.simd.x86;
+import iakh.simd._version;
 
-static if (iakh.simd.x86.isAvailable)
+static if (simdArch == simdArch.X86)
 {
     version = X86_SIMD;
 }
