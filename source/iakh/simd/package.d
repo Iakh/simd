@@ -3,6 +3,7 @@ Architecture independent high level SIMD wrapers.
 +/
 module iakh.simd;
 
+import std.algorithm;
 import std.range;
 import std.traits : isSIMDVector;
 
@@ -28,6 +29,22 @@ else
     private enum isInSet(T, TSet...) = staticIndexOf!(T, TSet) != -1;
 }
 
+/++
+This function represents simdVec as ordinal array.
+It is introdused as workaround to DCD compiler bug with Vec.array[].
++/
+private auto simdArray(T)(ref T simdVec)
+{
+    version (GNU)
+    {
+        return simdVec.ptr[0 .. LengthOf!(T)];
+    }
+    else
+    {
+        return simdVec.array[];
+    }
+}
+
 // Cmp mask double
 public
 {
@@ -39,7 +56,9 @@ public
         }
         else
         {
-            static assert(false, "Unsupported on this architecture");
+            double2 res;
+            res.array = zip(a.simdArray, b.simdArray).map!"a[0] < a[1]";
+            return res;
         }
     }
 
@@ -225,7 +244,20 @@ public
     {
         version (X86_SIMD)
         {
-            return Mask128Bit!long(sse4_1.pcmpeqq(a, b));
+            static if (x86SIMDVersion >= X86SIMDVersion.SSE4_1)
+            {
+                return Mask128Bit!long(sse4_1.pcmpeqq(a, b));
+            }
+            else static if (x86SIMDVersion >= X86SIMDVersion.SSE2)
+            {
+                long2 res;
+                zip(a.simdArray, b.simdArray).map!"(a[0] != a[1]) - 1".copy(res.simdArray);
+                return Mask128Bit!long(res);
+            }
+            else
+            {
+                static assert(false, "Unsupported on this architecture");
+            }
         }
         else
         {
@@ -491,7 +523,7 @@ struct Mask128Bit(TInt)
 
     bool opIndex(size_t i)
     {
-        return cast(bool)vector.array[i];
+        return cast(bool)vector.simdArray[i];
     }
 
     unittest
@@ -520,7 +552,7 @@ struct Mask128Bit(TInt)
         }
 
         TInt val = cast(TInt)!a - 1;
-        vector.array[i] = val;
+        vector.simdArray[i] = val;
     }
 
     unittest
@@ -537,11 +569,11 @@ struct Mask128Bit(TInt)
     void opIndexOpAssign(string op)(bool a, size_t i)
     {
         TInt val = cast(TInt)!a - 1;
-        vector.array[i] = val;
+        vector.simdArray[i] = val;
 
-        static if (op == "|") vector.array[i] |= val;
-        else static if (op == "&") vector.array[i] &= val;
-        else static if (op == "^") vector.array[i] ^= val;
+        static if (op == "|") vector.simdArray[i] |= val;
+        else static if (op == "&") vector.simdArray[i] &= val;
+        else static if (op == "^") vector.simdArray[i] ^= val;
         else static assert(false, "Unsupported operation " ~ op);
     }
 
@@ -566,7 +598,18 @@ struct Mask128Bit(TInt)
     {
         version (X86_SIMD)
         {
-            return sse4_1.pblendvb(a, b, vector);
+            static if (x86SIMDVersion >= X86SIMDVersion.SSE4_1)
+            {
+                return sse4_1.pblendvb(a, b, vector);
+            }
+            else static if (x86SIMDVersion >= X86SIMDVersion.SSE2)
+            {
+                return sse2.pxor(a, sse2.pand(vector, sse2.pxor(a, b)));
+            }
+            else
+            {
+                static assert(false, "Unsupported by this compiler");
+            }
         }
         else
         {
@@ -665,7 +708,7 @@ unittest
     foreach (n, t ; testArray)
     {
         byte16 b;
-        b.array[] = t.mask;
+        t.mask[].copy(b.simdArray);
         auto a = Mask128Bit!byte(b);
         import std.string;
         auto msg = "Test number %s".format(n);
