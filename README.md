@@ -13,8 +13,8 @@ Implementation plan (evolvs):
 -----------------------------
  * simdFind - demo with sse, sse2. (done)
  * Implement Mask128Bit. Vector comparison. (done)
- * Compile time SIMD version check.
- * Fallback SIMD implementations.
+ * Compile time SIMD version check (done).
+ * Fallback SIMD implementations (implemented fallback to sse2).
  * Implement Comprable!UInt.
  * Define simd subset supported/emulated by all archs. High level design.
  * Size independent vector/mask.
