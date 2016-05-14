@@ -5,7 +5,7 @@ module iakh.simd;
 
 import std.algorithm;
 import std.range;
-import std.traits : isSIMDVector;
+import std.traits : isSIMDVector, Signed, isSigned, isUnsigned;
 
 import iakh.simd.x86;
 import iakh.simd._version;
@@ -33,7 +33,7 @@ else
 This function represents simdVec as ordinal array.
 It is introdused as workaround to DCD compiler bug with Vec.array[].
 +/
-private auto simdArray(T)(ref T simdVec)
+private auto vecToArray(T)(ref T simdVec)
 {
     version (GNU)
     {
@@ -57,7 +57,7 @@ public
         else
         {
             double2 res;
-            res.array = zip(a.simdArray, b.simdArray).map!"a[0] < a[1]";
+            res.array = zip(a.vecToArray, b.vecToArray).map!"a[0] < a[1]";
             return res;
         }
     }
@@ -204,11 +204,11 @@ public
 // Cmp mask integral
 public
 {
-    auto maskEqual(byte16 a, byte16 b)
+    Mask128Bit!byte maskEqual(byte16 a, byte16 b)
     {
         version (X86_SIMD)
         {
-            return Mask128Bit!long(sse2.pcmpeqb(a, b));
+            return Mask128Bit!byte(sse2.pcmpeqb(a, b));
         }
         else
         {
@@ -216,11 +216,11 @@ public
         }
     }
 
-    auto maskEqual(short8 a, short8 b)
+    Mask128Bit!short maskEqual(short8 a, short8 b)
     {
         version (X86_SIMD)
         {
-            return Mask128Bit!long(sse2.pcmpeqw(a, b));
+            return Mask128Bit!short(sse2.pcmpeqw(a, b));
         }
         else
         {
@@ -228,11 +228,11 @@ public
         }
     }
 
-    auto maskEqual(int4 a, int4 b)
+    Mask128Bit!int maskEqual(int4 a, int4 b)
     {
         version (X86_SIMD)
         {
-            return Mask128Bit!long(sse2.pcmpeqd(a, b));
+            return Mask128Bit!int(sse2.pcmpeqd(a, b));
         }
         else
         {
@@ -240,7 +240,7 @@ public
         }
     }
 
-    auto maskEqual(long2 a, long2 b)
+    Mask128Bit!long maskEqual(long2 a, long2 b)
     {
         version (X86_SIMD)
         {
@@ -251,7 +251,602 @@ public
             else static if (x86SIMDVersion >= X86SIMDVersion.SSE2)
             {
                 long2 res;
-                zip(a.simdArray, b.simdArray).map!"(a[0] != a[1]) - 1".copy(res.simdArray);
+                zip(a.vecToArray, b.vecToArray).map!"(a[0] != a[1]) - 1".copy(res.vecToArray);
+                return Mask128Bit!long(res);
+            }
+            else
+            {
+                static assert(false, "Unsupported on this architecture");
+            }
+        }
+        else
+        {
+            static assert(false, "Unsupported on this architecture");
+        }
+    }
+
+    Mask128Bit!byte maskGreater(byte16 a, byte16 b)
+    {
+        version (X86_SIMD)
+        {
+            return Mask128Bit!byte(sse2.pcmpgtb(a, b));
+        }
+        else
+        {
+            static assert(false, "Unsupported on this architecture");
+        }
+    }
+
+    Mask128Bit!short maskGreater(short8 a, short8 b)
+    {
+        version (X86_SIMD)
+        {
+            return Mask128Bit!short(sse2.pcmpgtw(a, b));
+        }
+        else
+        {
+            static assert(false, "Unsupported on this architecture");
+        }
+    }
+
+    Mask128Bit!int maskGreater(int4 a, int4 b)
+    {
+        version (X86_SIMD)
+        {
+            return Mask128Bit!int(sse2.pcmpgtd(a, b));
+        }
+        else
+        {
+            static assert(false, "Unsupported on this architecture");
+        }
+    }
+
+    Mask128Bit!long maskGreater(long2 a, long2 b)
+    {
+        version (X86_SIMD)
+        {
+            static if (x86SIMDVersion >= X86SIMDVersion.SSE4_1)
+            {
+                return Mask128Bit!long(sse4_2.pcmpgtq(a, b));
+            }
+            else static if (x86SIMDVersion >= X86SIMDVersion.SSE2)
+            {
+                long2 res;
+                zip(a.vecToArray, b.vecToArray).map!"(a[0] <= a[1]) - 1".copy(res.vecToArray);
+                return Mask128Bit!long(res);
+            }
+            else
+            {
+                static assert(false, "Unsupported on this architecture");
+            }
+        }
+        else
+        {
+            static assert(false, "Unsupported on this architecture");
+        }
+    }
+
+    Mask128Bit!byte maskLess(byte16 a, byte16 b)
+    {
+        version (X86_SIMD)
+        {
+            return maskGreater(b, a);
+        }
+        else
+        {
+            static assert(false, "Unsupported on this architecture");
+        }
+    }
+
+    Mask128Bit!short maskLess(short8 a, short8 b)
+    {
+        version (X86_SIMD)
+        {
+            return maskGreater(b, a);
+        }
+        else
+        {
+            static assert(false, "Unsupported on this architecture");
+        }
+    }
+
+    Mask128Bit!int maskLess(int4 a, int4 b)
+    {
+        version (X86_SIMD)
+        {
+            return maskGreater(b, a);
+        }
+        else
+        {
+            static assert(false, "Unsupported on this architecture");
+        }
+    }
+
+    Mask128Bit!long maskLess(long2 a, long2 b)
+    {
+        version (X86_SIMD)
+        {
+            static if (x86SIMDVersion >= X86SIMDVersion.SSE4_1)
+            {
+                return maskGreater(b, a);
+            }
+            else static if (x86SIMDVersion >= X86SIMDVersion.SSE2)
+            {
+                long2 res;
+                zip(a.vecToArray, b.vecToArray).map!"(a[0] >= a[1]) - 1".copy(res.vecToArray);
+                return Mask128Bit!long(res);
+            }
+            else
+            {
+                static assert(false, "Unsupported on this architecture");
+            }
+        }
+        else
+        {
+            static assert(false, "Unsupported on this architecture");
+        }
+    }
+
+    Mask128Bit!byte maskLessOrEqual(byte16 a, byte16 b)
+    {
+        version (X86_SIMD)
+        {
+            return ~maskGreater(a, b);
+        }
+        else
+        {
+            static assert(false, "Unsupported on this architecture");
+        }
+    }
+
+    Mask128Bit!short maskLessOrEqual(short8 a, short8 b)
+    {
+        version (X86_SIMD)
+        {
+            return ~maskGreater(a, b);
+        }
+        else
+        {
+            static assert(false, "Unsupported on this architecture");
+        }
+    }
+
+    Mask128Bit!int maskLessOrEqual(int4 a, int4 b)
+    {
+        version (X86_SIMD)
+        {
+            return ~maskGreater(a, b);
+        }
+        else
+        {
+            static assert(false, "Unsupported on this architecture");
+        }
+    }
+
+    Mask128Bit!long maskLessOrEqual(long2 a, long2 b)
+    {
+        version (X86_SIMD)
+        {
+            static if (x86SIMDVersion >= X86SIMDVersion.SSE4_1)
+            {
+                return ~maskGreater(a, b);
+            }
+            else static if (x86SIMDVersion >= X86SIMDVersion.SSE2)
+            {
+                long2 res;
+                zip(a.vecToArray, b.vecToArray).map!"(a[0] > a[1]) - 1".copy(res.vecToArray);
+                return Mask128Bit!long(res);
+            }
+            else
+            {
+                static assert(false, "Unsupported on this architecture");
+            }
+        }
+        else
+        {
+            static assert(false, "Unsupported on this architecture");
+        }
+    }
+
+    Mask128Bit!byte maskGreaterOrEqual(byte16 a, byte16 b)
+    {
+        version (X86_SIMD)
+        {
+            return ~maskGreater(b, a);
+        }
+        else
+        {
+            static assert(false, "Unsupported on this architecture");
+        }
+    }
+
+    Mask128Bit!short maskGreaterOrEqual(short8 a, short8 b)
+    {
+        version (X86_SIMD)
+        {
+            return ~maskGreater(b, a);
+        }
+        else
+        {
+            static assert(false, "Unsupported on this architecture");
+        }
+    }
+
+    Mask128Bit!int maskGreaterOrEqual(int4 a, int4 b)
+    {
+        version (X86_SIMD)
+        {
+            return ~maskGreater(b, a);
+        }
+        else
+        {
+            static assert(false, "Unsupported on this architecture");
+        }
+    }
+
+    Mask128Bit!long maskGreaterOrEqual(long2 a, long2 b)
+    {
+        version (X86_SIMD)
+        {
+            static if (x86SIMDVersion >= X86SIMDVersion.SSE4_1)
+            {
+                return ~maskGreater(b, a);
+            }
+            else static if (x86SIMDVersion >= X86SIMDVersion.SSE2)
+            {
+                long2 res;
+                zip(a.vecToArray, b.vecToArray).map!"(a[0] < a[1]) - 1".copy(res.vecToArray);
+                return Mask128Bit!long(res);
+            }
+            else
+            {
+                static assert(false, "Unsupported on this architecture");
+            }
+        }
+        else
+        {
+            static assert(false, "Unsupported on this architecture");
+        }
+    }
+
+    Mask128Bit!byte maskNotEqual(byte16 a, byte16 b)
+    {
+        version (X86_SIMD)
+        {
+            return ~maskEqual(a, b);
+        }
+        else
+        {
+            static assert(false, "Unsupported on this architecture");
+        }
+    }
+
+    Mask128Bit!short maskNotEqual(short8 a, short8 b)
+    {
+        version (X86_SIMD)
+        {
+            return ~maskEqual(a, b);
+        }
+        else
+        {
+            static assert(false, "Unsupported on this architecture");
+        }
+    }
+
+    Mask128Bit!int maskNotEqual(int4 a, int4 b)
+    {
+        version (X86_SIMD)
+        {
+            return ~maskEqual(a, b);
+        }
+        else
+        {
+            static assert(false, "Unsupported on this architecture");
+        }
+    }
+
+    Mask128Bit!long maskNotEqual(long2 a, long2 b)
+    {
+        version (X86_SIMD)
+        {
+            static if (x86SIMDVersion >= X86SIMDVersion.SSE4_1)
+            {
+                return ~maskEqual(a, b);
+            }
+            else static if (x86SIMDVersion >= X86SIMDVersion.SSE2)
+            {
+                long2 res;
+                zip(a.vecToArray, b.vecToArray).map!"(a[0] == a[1]) - 1".copy(res.vecToArray);
+                return Mask128Bit!long(res);
+            }
+            else
+            {
+                static assert(false, "Unsupported on this architecture");
+            }
+        }
+        else
+        {
+            static assert(false, "Unsupported on this architecture");
+        }
+    }
+
+}
+
+version (unittest)
+{
+    struct TTestRow(ArrayT)
+    {
+        ArrayT a;
+        ArrayT b;
+        ArrayT maskEqual;
+        ArrayT maskNotEqual;
+        ArrayT maskGreater;
+        ArrayT maskGreaterOrEqual;
+        ArrayT maskLess;
+        ArrayT maskLessOrEqual;
+    }
+
+    void testMaskT(Int, Vec, Array)(TTestRow!Array[] data)
+    {
+        static ref Vec toVec(ref Array a)
+        {
+            return *cast(Vec*)a.ptr;
+        }
+
+        foreach (row; data)
+        {
+            Vec v1 = toVec(row.a);
+            Vec v2 = toVec(row.b);
+            assert(maskEqual(v1, v2).pack == Mask128Bit!Int(toVec(row.maskEqual)).pack);
+            assert(maskNotEqual(v1, v2).pack == Mask128Bit!Int(toVec(row.maskNotEqual)).pack);
+            assert(maskGreater(v1, v2).pack == Mask128Bit!Int(toVec(row.maskGreater)).pack);
+            assert(maskGreaterOrEqual(v1, v2).pack == Mask128Bit!Int(toVec(row.maskGreaterOrEqual)).pack);
+            assert(maskLess(v1, v2).pack == Mask128Bit!Int(toVec(row.maskLess)).pack);
+            assert(maskLessOrEqual(v1, v2).pack == Mask128Bit!Int(toVec(row.maskLessOrEqual)).pack);
+        }
+
+    }
+
+    // byte
+    unittest
+    {
+        enum arraySize = 16;
+        alias Int = byte;
+        alias Array = Int[arraySize];
+        alias TestRow = TTestRow!(Array);
+        alias vec = __vector(Array);
+        enum Int T = -1;
+        enum Int F = 0;
+
+        TestRow[] data = [
+        {
+            a :                     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            b :                     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            maskEqual :             [T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T],
+            maskNotEqual :          [F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F],
+            maskGreater :           [F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F],
+            maskGreaterOrEqual :    [T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T],
+            maskLess :              [F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F],
+            maskLessOrEqual :       [T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T]
+        }
+        , {
+            a :                     [1, 5, 9, 0, 0, 0, 0, 0, 0, 0, 0, 0, -5, 0, Int.max, Int.min],
+            b :                     [8, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 19, -1, Int.min, Int.max],
+            maskEqual :             [F, T, F, T, T, T, T, T, T, T, T, T, F, F, F, F],
+            maskNotEqual :          [T, F, T, F, F, F, F, F, F, F, F, F, T, T, T, T],
+            maskGreater :           [F, F, T, F, F, F, F, F, F, F, F, F, F, T, T, F],
+            maskGreaterOrEqual :    [F, T, T, T, T, T, T, T, T, T, T, T, F, T, T, F],
+            maskLess :              [T, F, F, F, F, F, F, F, F, F, F, F, T, F, F, T],
+            maskLessOrEqual :       [T, T, F, T, T, T, T, T, T, T, T, T, T, F, F, T]
+        }
+        ];
+
+        testMaskT!(Int, vec, Array)(data);
+    }
+
+    // short
+    unittest
+    {
+        enum arraySize = 8;
+        alias Int = short;
+        alias Array = Int[arraySize];
+        alias TestRow = TTestRow!(Array);
+        alias vec = __vector(Array);
+        enum Int T = -1;
+        enum Int F = 0;
+
+        TestRow[] data = [
+        {
+            a :                     [0, 0, 0, 0, 0, 0, 0, 0],
+            b :                     [0, 0, 0, 0, 0, 0, 0, 0],
+            maskEqual :             [T, T, T, T, T, T, T, T],
+            maskNotEqual :          [F, F, F, F, F, F, F, F],
+            maskGreater :           [F, F, F, F, F, F, F, F],
+            maskGreaterOrEqual :    [T, T, T, T, T, T, T, T],
+            maskLess :              [F, F, F, F, F, F, F, F],
+            maskLessOrEqual :       [T, T, T, T, T, T, T, T]
+        }
+        , {
+            a :                     [1, 5, 9, 0, -5, 0, Int.max, Int.min],
+            b :                     [8, 5, 0, 0, 19, -1, Int.min, Int.max],
+            maskEqual :             [F, T, F, T, F, F, F, F],
+            maskNotEqual :          [T, F, T, F, T, T, T, T],
+            maskGreater :           [F, F, T, F, F, T, T, F],
+            maskGreaterOrEqual :    [F, T, T, T, F, T, T, F],
+            maskLess :              [T, F, F, F, T, F, F, T],
+            maskLessOrEqual :       [T, T, F, T, T, F, F, T]
+        }
+        ];
+
+        testMaskT!(Int, vec, Array)(data);
+    }
+
+    // int
+    unittest
+    {
+        enum arraySize = 4;
+        alias Int = int;
+        alias Array = Int[arraySize];
+        alias TestRow = TTestRow!(Array);
+        alias vec = __vector(Array);
+        enum Int T = -1;
+        enum Int F = 0;
+
+        TestRow[] data = [
+        {
+            a :                     [0, 0, 0, 0],
+            b :                     [0, 0, 0, 0],
+            maskEqual :             [T, T, T, T],
+            maskNotEqual :          [F, F, F, F],
+            maskGreater :           [F, F, F, F],
+            maskGreaterOrEqual :    [T, T, T, T],
+            maskLess :              [F, F, F, F],
+            maskLessOrEqual :       [T, T, T, T]
+        }
+        , {
+            a :                     [-5, 0, Int.max, Int.min],
+            b :                     [19, -1, Int.min, Int.max],
+            maskEqual :             [F, F, F, F],
+            maskNotEqual :          [T, T, T, T],
+            maskGreater :           [F, T, T, F],
+            maskGreaterOrEqual :    [F, T, T, F],
+            maskLess :              [T, F, F, T],
+            maskLessOrEqual :       [T, F, F, T]
+        }
+        , {
+            a :                     [1, 5, 9, 0],
+            b :                     [8, 5, 0, 0],
+            maskEqual :             [F, T, F, T],
+            maskNotEqual :          [T, F, T, F],
+            maskGreater :           [F, F, T, F],
+            maskGreaterOrEqual :    [F, T, T, T],
+            maskLess :              [T, F, F, F],
+            maskLessOrEqual :       [T, T, F, T]
+        }
+        ];
+
+        testMaskT!(Int, vec, Array)(data);
+    }
+
+    // long
+    unittest
+    {
+        enum arraySize = 2;
+        alias Int = long;
+        alias Array = Int[arraySize];
+        alias TestRow = TTestRow!(Array);
+        alias vec = __vector(Array);
+        enum Int T = -1;
+        enum Int F = 0;
+
+        TestRow[] data = [
+        {
+            a :                     [0, 0],
+            b :                     [0, 0],
+            maskEqual :             [T, T],
+            maskNotEqual :          [F, F],
+            maskGreater :           [F, F],
+            maskGreaterOrEqual :    [T, T],
+            maskLess :              [F, F],
+            maskLessOrEqual :       [T, T]
+        }
+        , {
+            a :                     [Int.max, Int.min],
+            b :                     [Int.min, Int.max],
+            maskEqual :             [F, F],
+            maskNotEqual :          [T, T],
+            maskGreater :           [T, F],
+            maskGreaterOrEqual :    [T, F],
+            maskLess :              [F, T],
+            maskLessOrEqual :       [F, T]
+        }
+        , {
+            a :                     [-5, 0],
+            b :                     [19, -1],
+            maskEqual :             [F, F],
+            maskNotEqual :          [T, T],
+            maskGreater :           [F, T],
+            maskGreaterOrEqual :    [F, T],
+            maskLess :              [T, F],
+            maskLessOrEqual :       [T, F]
+        }
+        , {
+            a :                     [9, 0],
+            b :                     [0, 0],
+            maskEqual :             [F, T],
+            maskNotEqual :          [T, F],
+            maskGreater :           [T, F],
+            maskGreaterOrEqual :    [T, T],
+            maskLess :              [F, F],
+            maskLessOrEqual :       [F, T]
+        }
+        , {
+            a :                     [1, 5],
+            b :                     [8, 5],
+            maskEqual :             [F, T],
+            maskNotEqual :          [T, F],
+            maskGreater :           [F, F],
+            maskGreaterOrEqual :    [F, T],
+            maskLess :              [T, F],
+            maskLessOrEqual :       [T, T]
+        }
+        ];
+
+        testMaskT!(Int, vec, Array)(data);
+    }
+}
+
+// Cmp mask unsigned
+public
+{
+    Mask128Bit!byte maskEqual(ubyte16 a, ubyte16 b)
+    {
+        version (X86_SIMD)
+        {
+            return Mask128Bit!byte(sse2.pcmpeqb(a, b));
+        }
+        else
+        {
+            static assert(false, "Unsupported on this architecture");
+        }
+    }
+
+    Mask128Bit!short maskEqual(ushort8 a, ushort8 b)
+    {
+        version (X86_SIMD)
+        {
+            return Mask128Bit!short(sse2.pcmpeqw(a, b));
+        }
+        else
+        {
+            static assert(false, "Unsupported on this architecture");
+        }
+    }
+
+    Mask128Bit!int maskEqual(uint4 a, uint4 b)
+    {
+        version (X86_SIMD)
+        {
+            return Mask128Bit!int(sse2.pcmpeqd(a, b));
+        }
+        else
+        {
+            static assert(false, "Unsupported on this architecture");
+        }
+    }
+
+    Mask128Bit!long maskEqual(ulong2 a, ulong2 b)
+    {
+        version (X86_SIMD)
+        {
+            static if (x86SIMDVersion >= X86SIMDVersion.SSE4_1)
+            {
+                return Mask128Bit!long(sse4_1.pcmpeqq(a, b));
+            }
+            else static if (x86SIMDVersion >= X86SIMDVersion.SSE2)
+            {
+                long2 res;
+                zip(a.vecToArray, b.vecToArray).map!"(a[0] != a[1]) - 1".copy(res.vecToArray);
                 return Mask128Bit!long(res);
             }
             else
@@ -523,7 +1118,7 @@ struct Mask128Bit(TInt)
 
     bool opIndex(size_t i)
     {
-        return cast(bool)vector.simdArray[i];
+        return cast(bool)vector.vecToArray[i];
     }
 
     unittest
@@ -552,7 +1147,7 @@ struct Mask128Bit(TInt)
         }
 
         TInt val = cast(TInt)!a - 1;
-        vector.simdArray[i] = val;
+        vector.vecToArray[i] = val;
     }
 
     unittest
@@ -569,11 +1164,11 @@ struct Mask128Bit(TInt)
     void opIndexOpAssign(string op)(bool a, size_t i)
     {
         TInt val = cast(TInt)!a - 1;
-        vector.simdArray[i] = val;
+        vector.vecToArray[i] = val;
 
-        static if (op == "|") vector.simdArray[i] |= val;
-        else static if (op == "&") vector.simdArray[i] &= val;
-        else static if (op == "^") vector.simdArray[i] ^= val;
+        static if (op == "|") vector.vecToArray[i] |= val;
+        else static if (op == "&") vector.vecToArray[i] &= val;
+        else static if (op == "^") vector.vecToArray[i] ^= val;
         else static assert(false, "Unsupported operation " ~ op);
     }
 
@@ -708,7 +1303,7 @@ unittest
     foreach (n, t ; testArray)
     {
         byte16 b;
-        t.mask[].copy(b.simdArray);
+        t.mask[].copy(b.vecToArray);
         auto a = Mask128Bit!byte(b);
         import std.string;
         auto msg = "Test number %s".format(n);
@@ -720,5 +1315,185 @@ unittest
         assert(a.indexOfFirst == t.indexOfFirst, msg);
         assert(a.count == t.count, msg);
     }
+}
+
+/++
+Allows to compare unsigned integers(ubyte, ushort, uint, ulong)
+on any architecture. It supports comparation only (mask operations).
++/
+struct Comparable(VecUInt : __vector(UInt[N]), UInt, size_t N)
+    if (isUnsigned!UInt)
+{
+    this(VecUInt vec)
+    {
+        static if (isNativeUintCmp)
+        {
+            m_vector = vec;
+        }
+        else
+        {
+            m_vector = vec - getCastVec;
+        }
+    }
+
+    /++ Returns original unsigned vector.
+    +/
+    VecUInt get()
+    {
+        static if (isNativeUintCmp)
+        {
+            return m_vector;
+        }
+        else
+        {
+            return cast(VecUInt)m_vector + getCastVec;
+        }
+    }
+private:
+    static if (!isNativeUintCmp)
+    VecUInt getCastVec() pure @safe
+    {
+        VecUInt res;
+        res = cast(UInt)SignedInt.min;
+        return res;
+    }
+
+    auto getActual()
+    {
+        return m_vector;
+    }
+private:
+    static if (isNativeUintCmp)
+    {
+        alias ImplVecT = VecUInt;
+        ImplVecT m_vector;
+    }
+    else
+    {
+        alias ImplVecT = Vector!(Signed!UInt[N]);
+        alias SignedInt = Signed!UInt;
+        ImplVecT m_vector;
+    }
+
+    /++ Check is current support of comparison for UInt vector is not worse
+        than for signed one. E. g. if simd is not supported simulation makes no
+        sense, but for SSE2 it does.
+    +/
+    static bool checkNativeUintCmp()
+    {
+        return ((simdArch == SIMDArch.None) || (x86SIMDVersion < X86SIMDVersion.SSE2));
+    }
+
+    enum bool isNativeUintCmp = checkNativeUintCmp;
+}
+
+auto comparable(Vec : __vector(UInt[N]), UInt, size_t N)(Vec a)
+    if (isUnsigned!UInt)
+{
+    alias UInt = ElemOf!(Vec);
+    enum size = LengthOf!(Vec);
+    return Comparable!(Vector!(UInt[size]))(a);
+}
+
+unittest
+{
+    import std.conv;
+    uint4 a = [1, 5, 0xFFF, 0xFFFF];
+    auto b = a.comparable.get;
+    assert(maskEqual(b, a).all, b.vecToArray.to!string ~ ", " ~ a.vecToArray.to!string);
+}
+
+public
+{
+    auto maskEqual(Vec : Comparable!UInt, UInt)(Vec a, Vec b)
+    {
+        return maskEqual(a.m_vector, b.m_vector);
+    }
+
+    unittest
+    {
+        uint4 a = [uint.max, 0, 3, 7];
+        uint4 b = [1, 1, 3, 3];
+        auto res = maskEqual(a.comparable, b.comparable);
+        auto expected = Mask128Bit!int(int4([0, 0, -1, 0]));
+        import std.string;
+        assert(res == expected, "%s".format(res.vector.vecToArray));
+    }
+
+    auto maskNotEqual(Vec : Comparable!UInt, UInt)(Vec a, Vec b)
+    {
+        return maskNotEqual(a.m_vector, b.m_vector);
+    }
+
+    unittest
+    {
+        uint4 a = [uint.max, 0, 3, 7];
+        uint4 b = [1, 1, 3, 3];
+        auto res = maskNotEqual(a.comparable, b.comparable);
+        auto expected = Mask128Bit!int(int4([-1, -1, 0, -1]));
+        import std.string;
+        assert(res == expected, "%s".format(res.vector.vecToArray));
+    }
+
+    auto maskGreater(Vec : Comparable!UInt, UInt)(Vec a, Vec b)
+    {
+        return maskGreater(a.m_vector, b.m_vector);
+    }
+
+    unittest
+    {
+        uint4 a = [uint.max, 0, 3, 7];
+        uint4 b = [1, 1, 7, 3];
+        auto res = maskGreater(a.comparable, b.comparable);
+        auto expected = Mask128Bit!int(int4([-1, 0, 0, -1]));
+        import std.string;
+        assert(res == expected, "%s".format(res.vector.vecToArray));
+    }
+
+    auto maskLess(Vec : Comparable!UInt, UInt)(Vec a, Vec b)
+    {
+        return maskLess(a.m_vector, b.m_vector);
+    }
+
+    unittest
+    {
+        uint4 a = [uint.max, 0, 3, 7];
+        uint4 b = [1, 1, 3, 3];
+        auto res = maskLess(a.comparable, b.comparable);
+        auto expected = Mask128Bit!int(int4([0, -1, 0, 0]));
+        import std.string;
+        assert(res == expected, "%s".format(res.vector.vecToArray));
+    }
+
+    auto maskLessOrEqual(Vec : Comparable!UInt, UInt)(Vec a, Vec b)
+    {
+        return maskLessOrEqual(a.m_vector, b.m_vector);
+    }
+
+    unittest
+    {
+        uint4 a = [uint.max, 0, 3, 7];
+        uint4 b = [1, 1, 3, 3];
+        auto res = maskLessOrEqual(a.comparable, b.comparable);
+        auto expected = Mask128Bit!int(int4([0, -1, -1, 0]));
+        import std.string;
+        assert(res == expected, "%s".format(res.vector.vecToArray));
+    }
+
+    auto maskGreaterOrEqual(Vec : Comparable!UInt, UInt)(Vec a, Vec b)
+    {
+        return maskGreaterOrEqual(a.m_vector, b.m_vector);
+    }
+
+    unittest
+    {
+        uint4 a = [uint.max, 0, 3, 7];
+        uint4 b = [1, 1, 3, 3];
+        auto res = maskGreaterOrEqual(a.comparable, b.comparable);
+        auto expected = Mask128Bit!int(int4([-1, 0, -1, -1]));
+        import std.string;
+        assert(res == expected, "%s".format(res.vector.vecToArray));
+    }
+
 }
 

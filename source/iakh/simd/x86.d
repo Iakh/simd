@@ -2821,12 +2821,44 @@ static:
 /// Namespace for sse4.2 intrinsics
 struct sse4_2
 {
+static if(x86SIMDVersion >= X86SIMDVersion.SSE4_2):
+static:
     //crc32 - CRC32C function (using 0x11edc6f41 as the polynomial).
     //pcmpestri - Packed compare explicit length string, Index.
     //pcmpestrm - Packed compare explicit length string, Mask.
     //pcmpistri - Packed compare implicit length string, Index.
     //pcmpistrm - Packed compare implicit length string, Mask.
-    //pcmpgtq - Packed compare, greater than.
+
+    /// pcmpgtq - Packed compare, greater than.
+    long2 pcmpgtq(long2 v1, long2 v2)
+    {
+        version(DigitalMars)
+        {
+            return __simd(XMM.PCMPGTQ, v1, v2);
+        }
+        else version(GNU)
+        {
+            return __builtin_ia32_pcmpgtq128(v1, v2);
+        }
+        else version(LDC)
+        {
+            return greaterMask!long2(v1, v2);
+        }
+        else
+        {
+            static assert(0, "Unsupported on this architecture");
+        }
+    }
+
+    /// Example:
+    unittest
+    {
+        long2 a = [2, 2];
+        long2 b = [1, 2];
+        auto c = pcmpgtq(a, b);
+        assert(c.array == [-1, 0]);
+    }
+
     //popcnt - Population count.
 }
 

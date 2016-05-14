@@ -9,7 +9,8 @@ enum X86SIMDVersion
     SSE3,
     S_SSE3,
     SSE4_1,
-    SSE4_2
+    SSE4_2,
+    AVX
 }
 
 version(X86)
