@@ -45,6 +45,88 @@ private auto vecToArray(T)(ref T simdVec)
     }
 }
 
+// Load & store
+public
+{
+    auto loadAligned128(BaseT)(BaseT* ptr)
+    {
+        void16 res = *cast(void16*)ptr;
+        return res;
+    }
+
+    unittest
+    {
+        align(128) int[4] arr = [1, 2, 3, 4];
+        int4 vec = loadAligned128(arr.ptr);
+        assert(vec.vecToArray == arr[]);
+    }
+
+    auto loadUnaligned128(BaseT)(BaseT* ptr)
+    {
+        // TODO: implement
+        void16 res;
+        res.vecToArray[] = *(cast(void[16]*)ptr);
+        return res;
+    }
+
+    unittest
+    {
+        align(128) int[5] arr = [1, 2, 3, 4, 5];
+        int4 vec = loadUnaligned128(arr[1 .. $].ptr);
+        assert(vec.vecToArray == arr[1 .. $]);
+    }
+
+    void storeAligned(BaseT, size_t N)(__vector(BaseT[N]) src, BaseT* ptr)
+    {
+        *cast(void16*)ptr = src;
+    }
+
+    void storeAligned(BaseT, size_t N)(__vector(BaseT[N]) src, BaseT[] arr)
+    in
+    {
+        assert(arr.length == N);
+    }
+    body
+    {
+        storeAligned(src, arr.ptr);
+    }
+
+    unittest
+    {
+        int4 vec = [10, 20, 30, 40];
+        align(128) int[5] arr = [1, 2, 3, 4, 5];
+        vec.storeAligned(arr[0 .. $ - 1]);
+        assert(vec.vecToArray == arr[0 .. $ - 1]);
+    }
+
+    void storeUnaligned(BaseT, size_t N)(__vector(BaseT[N]) src, BaseT* ptr)
+    {
+        int4 vec = [10, 20, 30, 40];
+        align(128) int[5] arr = [1, 2, 3, 4, 5];
+        vec.storeUnaligned(arr[1 .. $]);
+        assert(vec.vecToArray == arr[1 .. $]);
+    }
+
+    void storeUnaligned(BaseT, size_t N)(__vector(BaseT[N]) src, BaseT[] arr)
+    in
+    {
+        assert(arr.length == N);
+    }
+    body
+    {
+        storeUnaligned(src, arr.ptr);
+    }
+
+    unittest
+    {
+        int4 vec = [10, 20, 30, 40];
+        align(128) int[5] arr = [1, 2, 3, 4, 5];
+        vec.storeUnaligned(arr[1 .. $]);
+        assert(vec.vecToArray == arr[1 .. $]);
+    }
+
+}
+
 // Cmp mask double
 public
 {
@@ -201,7 +283,7 @@ public
 
 }
 
-// Cmp mask integral
+// Cmp mask integer
 public
 {
     Mask128Bit!byte maskEqual(byte16 a, byte16 b)
